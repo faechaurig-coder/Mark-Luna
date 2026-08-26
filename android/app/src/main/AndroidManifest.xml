@@ -8,11 +8,12 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application android:label="JARVIS" android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@android:drawable/ic_btn_speak_now">
 
         <!-- Escucha de notificaciones (WhatsApp, llamadas, etc) -->
         <service
             android:name=".JarvisNotificationListener"
+            android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -22,6 +23,7 @@
         <!-- Accesibilidad para leer pantalla (opcional, el usuario lo activa) -->
         <service
             android:name=".JarvisScreenService"
+            android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

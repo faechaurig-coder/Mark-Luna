@@ -27,18 +27,11 @@ public class JarvisWakeService extends Service {
         Notification n = new Notification.Builder(this, CHANNEL)
             .setContentTitle("🤖 JARVIS escuchando")
             .setContentText("Toca para abrir JARVIS")
-            .setSmallIcon(com.jarvsluna.companion.R.IconHelper.icon())
+            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .build();
         startForeground(101, n);
     }
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
-
-    // Helper de icono inline para no depender de recursos.
-    static class IconHelper {
-        static int icon() {
-            return android.R.drawable.ic_btn_speak_now;
-        }
-    }
 }
