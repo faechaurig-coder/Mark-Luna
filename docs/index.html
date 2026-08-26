@@ -283,18 +283,32 @@
     </div>
 
     <div class="secTitle">ACTIVACIÓN</div>
+    <label style="font-size:12px">Modo de activación (elige uno o varios):</label>
     <div class="row">
-      <span style="font-size:13px">👏 Despertar con aplausos</span>
+      <span style="font-size:13px">👏 Aplausos</span>
       <span class="switch"><input type="checkbox" id="inClap"><span class="pill"></span></span>
     </div>
     <label>Sensibilidad del aplauso: <span id="sensVal">medio</span></label>
     <input type="range" id="inSens" min="1" max="5" value="3">
+    <div class="row">
+      <span style="font-size:13px">🖱️ Doble toque en el círculo</span>
+      <span class="switch"><input type="checkbox" id="inTap"><span class="pill"></span></span>
+    </div>
+    <div class="row">
+      <span style="font-size:13px">🔌 Siempre despierto (no duerme la pantalla)</span>
+      <span class="switch"><input type="checkbox" id="inWake"><span class="pill"></span></span>
+    </div>
+    <div class="row">
+      <span style="font-size:13px">🔁 Auto-reconectar (al volver a la app)</span>
+      <span class="switch"><input type="checkbox" id="inRecon"><span class="pill"></span></span>
+    </div>
 
     <div class="secTitle">RECORDATORIOS</div>
     <div id="remList"></div>
 
     <div class="secTitle">DATOS</div>
     <button class="btn gray" id="btnExport">⬇️ Exportar mis datos</button>
+    <button class="btn gray" id="btnExportAPK">📱 Modo siempre activa — copiar config al APK</button>
     <button class="btn gray" id="btnReset" style="border:1px solid #5a2530;color:#ff9a9a">🗑️ Borrar TODO y empezar de cero</button>
 
     <button class="btn" id="btnCloseCfg">Guardar y cerrar</button>
@@ -375,7 +389,13 @@ const cfg = {
   get sens()   { return parseInt(localStorage.getItem("jv_sens") || "3"); },
   set sens(v)  { localStorage.setItem("jv_sens", String(v)); },
   get model()  { return localStorage.getItem("jv_model") || "models/gemini-2.0-flash-live-001"; },
-  set model(v) { localStorage.setItem("jv_model", v); }
+  set model(v) { localStorage.setItem("jv_model", v); },
+  get tap()    { return localStorage.getItem("jv_tap") !== "0"; },
+  set tap(v)   { localStorage.setItem("jv_tap", v ? "1" : "0"); },
+  get wake()   { return localStorage.getItem("jv_wake") === "1"; },
+  set wake(v)  { localStorage.setItem("jv_wake", v ? "1" : "0"); },
+  get recon()  { return localStorage.getItem("jv_recon") === "1"; },
+  set recon(v) { localStorage.setItem("jv_recon", v ? "1" : "0"); }
 };
 
 // ---------- Llenar y aplicar el panel ----------
@@ -388,6 +408,9 @@ function buildPanel() {
   $("inClap").checked = cfg.clap;
   $("inAnim").checked = cfg.anim;
   $("inSens").value = cfg.sens;
+  $("inTap").checked = cfg.tap;
+  $("inWake").checked = cfg.wake;
+  $("inRecon").checked = cfg.recon;
   const labels = ["muy baja","baja","medio","alta","muy alta"];
   $("sensVal").textContent = labels[cfg.sens - 1];
   // Lista de voces
@@ -430,12 +453,16 @@ function save() {
   cfg.clap = $("inClap").checked;
   cfg.anim = $("inAnim").checked;
   cfg.sens = parseInt($("inSens").value);
+  cfg.tap = $("inTap").checked;
+  cfg.wake = $("inWake").checked;
+  cfg.recon = $("inRecon").checked;
+  wakeCtl(cfg.wake);
   const labels = ["muy baja","baja","medio","alta","muy alta"];
   $("sensVal").textContent = labels[cfg.sens - 1];
   applyTheme();
   if (!live.on) clapCtl(cfg.clap);
 }
-["inKey","inModel","inName","inUserName","inPers","inClap","inAnim"].forEach(id => $(id).addEventListener("change", save));
+["inKey","inModel","inName","inUserName","inPers","inClap","inAnim","inTap","inWake","inRecon"].forEach(id => $(id).addEventListener("change", save));
 $("inSens").addEventListener("input", save);
 $("btnTest").onclick = async () => {
   const el = $("testResult");
@@ -470,6 +497,19 @@ $("btnExport").onclick = () => {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   a.download = "jarvis-datos.json"; a.click();
+};
+$("btnExportAPK").onclick = async () => {
+  const data = JSON.stringify({
+    jv_key: cfg.key, jv_model: cfg.model, jv_voice: cfg.voice, jv_name: cfg.name,
+    jv_uname: cfg.uname, jv_pers: cfg.pers, jv_theme: cfg.theme
+  });
+  try { await navigator.clipboard.writeText(data); }
+  catch {
+    const t = document.createElement("textarea");
+    t.value = data; document.body.appendChild(t); t.select();
+    document.execCommand("copy"); t.remove();
+  }
+  toast("📋 Config copiada. Pégala en el APK y listo.");
 };
 $("btnReset").onclick = () => {
   if (confirm("¿Seguro? Se borran TODOS los ajustes y recordatorios.")) {
@@ -798,6 +838,35 @@ function clapCtl(on) {
   }).catch(() => toast("Sin permiso de micrófono para 👏"));
 }
 
+// ---------- Siempre despierto (wake lock) ----------
+let wakeLock = null;
+async function wakeCtl(on) {
+  if (!on) { if (wakeLock) { try { await wakeLock.release(); } catch (e) {} wakeLock = null; } return; }
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch (e) { toast("Wake lock no disponible aquí"); }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && cfg.wake && !wakeLock) wakeCtl(true);
+});
+
+// ---------- Doble toque en el orbe ----------
+let lastTap = 0;
+$("orbStage").addEventListener("click", () => {
+  if (!cfg.tap || live.on) return;
+  const now = Date.now();
+  if (now - lastTap < 400) { lastTap = 0; live.connect(); }
+  else lastTap = now;
+});
+
+// ---------- Auto-reconectar al volver a la app ----------
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && cfg.recon && !live.on && !live.ws && cfg.key) {
+    live.connect();
+  }
+});
+
 // ---------- UI ----------
 function setStatus(t) { $("status").textContent = t; }
 function addMsg(who, t) {
@@ -975,7 +1044,7 @@ function refreshTitle() {
 refreshTitle();
 applyTheme();
 buildPanel();
-setupSW(); renderRem(); clapCtl(cfg.clap);
+setupSW(); renderRem(); clapCtl(cfg.clap); wakeCtl(cfg.wake);
 $("inName").addEventListener("change", refreshTitle);
 </script>
 </body>
