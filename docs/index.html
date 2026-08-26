@@ -24,8 +24,7 @@
     color:#cfe6f5; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
     display:flex; flex-direction:column; height:100dvh; overflow:hidden;
   }
-  body[data-anim="off"] .reactor svg { animation:none; }
-  body[data-anim="off"] .reactor { transition:none; }
+  body[data-anim="off"] .orb { animation:none; transition:none; }
   header {
     display:flex; align-items:center; gap:8px; padding:10px 14px;
     padding-top: max(10px, env(safe-area-inset-top));
@@ -46,20 +45,6 @@
     background:var(--c); border:none; color:#032430; font-weight:700;
     border-radius:8px; padding:6px 14px; margin-left:10px; cursor:pointer;
   }
-  #reactorWrap { position:relative; height:240px; display:flex; align-items:center; justify-content:center; }
-  .reactor {
-    width:190px; height:190px; border-radius:50%; position:relative;
-    transform: scale(calc(1 + var(--amp)*0.25));
-    transition: transform 0.08s linear;
-  }
-  .reactor .core {
-    position:absolute; inset:30px; border-radius:50%;
-    background: radial-gradient(circle, #fff 0%, var(--c) 35%, color-mix(in srgb, var(--c) 40%, #07141d) 70%, var(--bg) 100%);
-    box-shadow: 0 0 calc(30px + var(--amp)*60px) var(--c);
-  }
-  .reactor svg { position:absolute; inset:0; width:100%; height:100%; animation:spin var(--rspeed) linear infinite; }
-  .reactor svg circle { fill:none; stroke:var(--c); stroke-width:2; stroke-dasharray:12 22; opacity:.6; }
-  @keyframes spin { to { transform:rotate(360deg); } }
   #status { text-align:center; font-size:13px; color:#7ba4bd; margin-top:-6px; min-height:18px; }
   #transcript { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
   .msg { max-width:85%; padding:9px 13px; border-radius:14px; font-size:14px; line-height:1.4; }
@@ -126,12 +111,47 @@
   .seclist div small { color:#6d8ba0; display:block; font-size:11px; }
   .secTitle { font-size:11px; letter-spacing:2px; color:var(--c); margin:18px 0 4px; font-weight:700; }
   input[type=range] { width:100%; accent-color:var(--c); height:32px; }
+  .dot { width:12px; height:12px; border-radius:50%; background:#3a4a58; flex-shrink:0; }
+  .dot.on { background:#39ff8e; box-shadow:0 0 10px #39ff8e; }
+  .dot.busy { background:#ffc94d; box-shadow:0 0 10px #ffc94d; animation:dpulse 1s infinite; }
+  .dot.err { background:#ff5a6e; box-shadow:0 0 10px #ff5a6e; }
+  @keyframes dpulse { 50% { opacity:.35; } }
+  #reactorWrap { position:relative; height:240px; display:flex; align-items:center; justify-content:center; }
+  .orb {
+    width:170px; height:170px; border-radius:50%; position:relative;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, color-mix(in srgb, var(--c) 85%, #fff) 20%, var(--c) 55%, color-mix(in srgb, var(--c) 40%, #000) 100%);
+    box-shadow: 0 0 calc(35px + var(--amp)*70px) color-mix(in srgb, var(--c) 75%, transparent),
+                inset 0 -18px 35px rgba(0,0,0,.35),
+                inset 0 12px 25px rgba(255,255,255,.35);
+    transform: scale(calc(1 + var(--amp)*0.18));
+    transition: transform 0.08s linear;
+    animation: breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.12); } }
+  .eye {
+    position:absolute; top:33%; width:38px; height:52px; border-radius:50%;
+    background: radial-gradient(circle at 40% 35%, #1c2b3a 0%, #050a10 70%);
+    box-shadow: 0 0 12px rgba(0,0,0,.45), inset 0 0 8px rgba(255,255,255,.08);
+    overflow:hidden; transition: transform .1s;
+  }
+  .eye.left { left:25%; } .eye.right { right:25%; }
+  .eye .pupil {
+    position:absolute; left:50%; top:42%; width:14px; height:14px; border-radius:50%;
+    background: radial-gradient(circle, #eaf7ff 0%, var(--c) 80%);
+    box-shadow: 0 0 10px var(--c);
+    transform: translate(-50%,-50%);
+    transition: left .3s ease, top .3s ease, width .15s, height .15s;
+  }
+  .orb.blink .eye { transform: scaleY(0.08); }
+  .orb.talk .eye .pupil { width:19px; height:19px; }
+  body[data-anim="off"] .orb { animation:none; transition:none; }
 </style>
 </head>
 <body>
 
 <header>
   <h1><span id="appTitle">J A R V I S</span><br><small id="ver">v…</small></h1>
+  <span id="connDot" class="dot" title="Estado de conexión"></span>
   <button class="hbtn" id="btnUpdate">🔄 Actualizar</button>
   <button class="hbtn" id="btnCfg">⚙️</button>
 </header>
@@ -139,9 +159,9 @@
 <div id="installBar">📲 Instala JARVIS en tu celular <button id="btnInstall">Instalar</button></div>
 
 <div id="reactorWrap">
-  <div class="reactor">
-    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg>
-    <div class="core"></div>
+  <div class="orb" id="orb">
+    <div class="eye left"><div class="pupil"></div></div>
+    <div class="eye right"><div class="pupil"></div></div>
   </div>
 </div>
 <div id="status">Toca el círculo para activar</div>
@@ -161,6 +181,14 @@
     <div class="secTitle">CUENTA</div>
     <label>Tu llave de Gemini (gratis en aistudio.google.com/apikey)</label>
     <input id="inKey" type="password" placeholder="AIza…">
+    <label>Modelo de voz (si uno no conecta, prueba otro)</label>
+    <select id="inModel">
+      <option value="models/gemini-2.0-flash-live-001">Gemini 2.0 Flash Live (estable)</option>
+      <option value="models/gemini-live-2.5-flash-preview">Gemini 2.5 Flash Live (nuevo)</option>
+      <option value="models/gemini-2.5-flash-preview-native-audio-dialog">Gemini 2.5 Native Audio (más natural)</option>
+    </select>
+    <button class="btn gray" id="btnTest">🩺 Probar llave y conexión</button>
+    <div id="testResult" style="font-size:12px;margin-top:8px;color:#7ba4bd;line-height:1.5"></div>
 
     <div class="secTitle">IDENTIDAD</div>
     <label>Nombre de tu asistente (así te responde y se presenta)</label>
@@ -261,12 +289,15 @@ const cfg = {
   get anim()   { return localStorage.getItem("jv_anim") !== "0"; },
   set anim(v)  { localStorage.setItem("jv_anim", v ? "1" : "0"); },
   get sens()   { return parseInt(localStorage.getItem("jv_sens") || "3"); },
-  set sens(v)  { localStorage.setItem("jv_sens", String(v)); }
+  set sens(v)  { localStorage.setItem("jv_sens", String(v)); },
+  get model()  { return localStorage.getItem("jv_model") || "models/gemini-2.0-flash-live-001"; },
+  set model(v) { localStorage.setItem("jv_model", v); }
 };
 
 // ---------- Llenar y aplicar el panel ----------
 function buildPanel() {
   $("inKey").value = cfg.key;
+  $("inModel").value = cfg.model;
   $("inName").value = cfg.name === "JARVIS" ? "" : cfg.name;
   $("inUserName").value = cfg.uname;
   $("inPers").value = cfg.pers;
@@ -306,7 +337,8 @@ function applyTheme() {
     THEMES.find(t => t[0] === cfg.theme)[1]);
 }
 function save() {
-  cfg.key = $("inKey").value.trim();
+  cfg.key = $("inKey").value.replace(/["'\s]/g, "");
+  cfg.model = $("inModel").value;
   cfg.name = $("inName").value.trim() || "JARVIS";
   cfg.uname = $("inUserName").value.trim();
   cfg.pers = $("inPers").value;
@@ -318,8 +350,34 @@ function save() {
   applyTheme();
   if (!live.on) clapCtl(cfg.clap);
 }
-["inKey","inName","inUserName","inPers","inClap","inAnim"].forEach(id => $(id).addEventListener("change", save));
+["inKey","inModel","inName","inUserName","inPers","inClap","inAnim"].forEach(id => $(id).addEventListener("change", save));
 $("inSens").addEventListener("input", save);
+$("btnTest").onclick = async () => {
+  const el = $("testResult");
+  save();
+  if (!cfg.key) { el.textContent = "❌ No hay llave — pégala en el campo de arriba"; el.style.color = "#ff9a9a"; return; }
+  if (!cfg.key.startsWith("AIza") || cfg.key.length < 30) {
+    el.textContent = "⚠️ La llave parece incompleta (debe empezar con AIza y tener ~39 caracteres). La probaré de todos modos…";
+    el.style.color = "#ffc94d";
+  } else { el.textContent = "Probando con Google…"; el.style.color = "#7ba4bd"; }
+  try {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/" + cfg.model + "?key=" + cfg.key);
+    const d = await r.json();
+    if (d.error) {
+      el.textContent = "❌ Google dice: " + d.error.message;
+      el.style.color = "#ff9a9a"; return;
+    }
+    const methods = d.supportedGenerationMethods || [];
+    const ok = methods.includes("bidiGenerateContent");
+    el.textContent = ok
+      ? "✅ ¡Todo bien! Llave válida y modelo de voz disponible. Cierra esto y toca el globo."
+      : "⚠️ Llave válida, pero ese modelo no tiene voz en vivo. Elige otro modelo en la lista.";
+    el.style.color = ok ? "#4dffa6" : "#ffc94d";
+  } catch (e) {
+    el.textContent = "❌ Sin internet o Google no responde (" + e.message + ")";
+    el.style.color = "#ff9a9a";
+  }
+};
 $("btnExport").onclick = () => {
   const data = { recordatorios: rem.list, ajustes: {
     voz: cfg.voice, nombre: cfg.name, usuario: cfg.uname, personalidad: cfg.pers, tema: cfg.theme
@@ -407,22 +465,48 @@ const TOOLS = [{ function_declarations: [
   }
 ]}];
 
+function setConn(state, text) {
+  const d = $("connDot");
+  d.className = "dot" + (state === "on" ? " on" : state === "busy" ? " busy" : state === "err" ? " err" : "");
+  if (text) setStatus(text);
+}
+
 const live = {
-  ws:null, on:false, micStream:null, sendCtx:null, playCtx:null, nextStart:0, muted:false,
+  ws:null, on:false, micStream:null, sendCtx:null, playCtx:null, nextStart:0, muted:false, _to:null,
   async connect() {
     if (!cfg.key) { $("cfgModal").classList.add("open"); toast("Primero pon tu llave en ⚙️ Ajustes"); return; }
-    setStatus("Conectando…");
-    try {
-      this.ws = new WebSocket(WS_URL + "?key=" + cfg.key);
-      this.ws.onopen = () => this.setup();
-      this.ws.onmessage = (e) => this.onMsg(e);
-      this.ws.onclose = () => this.disconnect();
-      this.ws.onerror = () => setStatus("Error de conexión");
-    } catch (err) { setStatus("No se pudo conectar"); }
+    setConn("busy", "Conectando con Gemini…");
+    let settled = false;
+    try { this.ws = new WebSocket(WS_URL + "?key=" + cfg.key); }
+    catch (err) { setConn("err", "No se pudo crear la conexión"); return; }
+    this._to = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        try { this.ws.close(); } catch (e) {}
+        this.on = false; uiDisconnected();
+        setConn("err", "Gemini no respondió — usa 🩺 Probar llave en ⚙️");
+      }
+    }, 12000);
+    this.ws.onopen = () => this.setup();
+    this.ws.onmessage = (e) => this.onMsg(e);
+    this.ws.onerror = () => {
+      if (!settled) { settled = true; clearTimeout(this._to); setConn("err", "Error de red o llave inválida — usa 🩺 en ⚙️"); }
+    };
+    this.ws.onclose = (e) => {
+      clearTimeout(this._to);
+      const wasOn = this.on;
+      this.disconnect();
+      if (wasOn) { setConn("off", "Desconectado — toca el globo"); return; }
+      if (!settled) {
+        settled = true;
+        const why = e.reason ? ": " + e.reason : (e.code && e.code !== 1000 && e.code !== 1005 ? " (código " + e.code + ")" : "");
+        setConn("err", "Conexión rechazada" + why + " — usa 🩺 Probar llave en ⚙️");
+      }
+    };
   },
   setup() {
     this.ws.send(JSON.stringify({ setup: {
-      model: MODEL,
+      model: cfg.model,
       generationConfig: { responseModalities: ["AUDIO"],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: cfg.voice } } } },
       systemInstruction: { parts: [{ text: sysPrompt() }] },
@@ -433,8 +517,14 @@ const live = {
   },
   async onMsg(e) {
     const m = JSON.parse(e.data);
+    if (m.error) {
+      clearTimeout(this._to);
+      setConn("err", "Error de Gemini: " + (m.error.message || "desconocido"));
+      return;
+    }
     if (m.setupComplete) {
-      this.on = true; uiConnected(); setStatus("🟢 " + cfg.name + " activo — habla");
+      clearTimeout(this._to);
+      this.on = true; uiConnected(); setConn("on", "🟢 " + cfg.name + " activo — habla");
       await this.startMic();
       this.sendText("Saluda brevemente y di que estás listo.");
       return;
@@ -486,6 +576,7 @@ const live = {
     if (this.nextStart < now) this.nextStart = now + 0.05;
     src.start(this.nextStart); this.nextStart += buf.duration;
     document.documentElement.style.setProperty("--amp", Math.min(peak, 1));
+    $("orb").classList.toggle("talk", peak > 0.22);
   },
   flush() { this.nextStart = this.playCtx ? this.playCtx.currentTime : 0; },
   sendText(t) { this.ws.readyState === 1 && this.ws.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: t }] }], turnComplete: true } })); },
@@ -496,7 +587,7 @@ const live = {
     this.ws.send(JSON.stringify({ toolResponse: { functionResponses: [{ id: fc.id, name: fc.name, response: { result } }] } }));
   },
   disconnect() {
-    this.on = false; this.ws = null; uiDisconnected(); setStatus("Desconectado — toca el círculo");
+    this.on = false; this.ws = null; uiDisconnected();
     clapCtl(cfg.clap);
   }
 };
@@ -601,13 +692,41 @@ function addMsg(who, t) {
 }
 function uiConnected() { $("bigBtn").classList.remove("off"); $("bigBtn").textContent = "🎤"; clapCtl(false); }
 function uiDisconnected() { $("bigBtn").classList.add("off"); $("bigBtn").textContent = "🎤"; }
-$("bigBtn").onclick = () => live.on ? live.disconnect() && live.ws.close() : live.connect();
+$("bigBtn").onclick = () => {
+  if (live.on || live.ws) {
+    const w = live.ws;
+    live.disconnect();
+    if (w) { try { w.close(); } catch (e) {} }
+    setConn("off", "Desconectado — toca el globo");
+  } else {
+    live.connect();
+  }
+};
 $("btnMute").onclick = () => { live.muted = !live.muted; $("btnMute").textContent = live.muted ? "🔇" : "🔊"; };
 $("btnClap").onclick = () => { cfg.clap = !cfg.clap; $("inClap").checked = cfg.clap; toast(cfg.clap ? "👏 Aplausos activados" : "Aplausos desactivados"); if (!live.on) clapCtl(cfg.clap); };
 $("btnCfg").onclick = () => $("cfgModal").classList.add("open");
 $("btnCloseCfg").onclick = () => $("cfgModal").classList.remove("open");
 $("btnUpdate").onclick = checkUpdate;
 $("ver").textContent = "v…";
+
+// ---------- Animaciones del globo ----------
+(function blinkLoop() {
+  setTimeout(() => {
+    const o = $("orb");
+    if (o) { o.classList.add("blink"); setTimeout(() => o.classList.remove("blink"), 150); }
+    blinkLoop();
+  }, 2600 + Math.random() * 3400);
+})();
+(function lookLoop() {
+  const spots = [["50%","42%"],["36%","40%"],["64%","40%"],["50%","28%"],["50%","56%"],["42%","48%"],["58%","48%"]];
+  setTimeout(() => {
+    if (!live.on) {
+      const [x, y] = spots[Math.floor(Math.random() * spots.length)];
+      document.querySelectorAll("#orb .pupil").forEach(p => { p.style.left = x; p.style.top = y; });
+    }
+    lookLoop();
+  }, 1700 + Math.random() * 2600);
+})();
 
 // ---------- Inicio ----------
 function refreshTitle() {

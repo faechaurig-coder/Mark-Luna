@@ -1,6 +1,6 @@
 // JARVIS App — service worker con sistema de actualización.
 // Subir APP_VERSION en cada release hace que la app detecte la nueva versión.
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.2.0";
 const CACHE = "jarvis-app-" + APP_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg", "./icon-192.png", "./icon-512.png"];
 
