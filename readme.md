@@ -160,6 +160,26 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## 📱 Instalar como App PWA (celular) — 1 enlace que descarga la app
+
+En el **Panel Remoto** (`Remote Control` → QR → JARVIS), una vez que estás dentro:
+
+1. Tappe 🔽 **Instalar** (botón en el pie número pie) → la pregunta del navegador se dispara automáticamente.
+2. Acepta y el icono queda en tu pantalla de inicio.
+
+Además está el `manifest.json` con icono y `sw.js` (service worker), así que cualquier install "Add to Home screen" de Safari/Chrome también funciona.
+
+## 🖥️ Icono en escritorio (Windows/Mac/Linux) — link que crea el atajo
+
+```bash
+python launch/create_desktop_shortcut.py
+```
+
+- **Windows**: usa `launch/JARVIS.lnk` (VBS) o abre `launch/JARVIS.bat` manualmente
+- **Linux/Mac**: crea `~/Desktop/JARVIS.desktop` apuntando a `launch/JARVIS.sh`
+
+Al hacer click arranca el asistente completo.
+
 > ⚠️ **Nota de Instalación:** Algunas dependencias específicas del SO no se empaquetan en `requirements.txt` para mantener el repo ligero. Si te sale `ModuleNotFoundError`, instala el paquete faltante con `pip install <nombre_paquete>`.
 
 ---

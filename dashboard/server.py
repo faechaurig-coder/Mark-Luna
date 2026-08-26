@@ -565,6 +565,26 @@ class DashboardServer:
             from fastapi.responses import RedirectResponse
             return RedirectResponse(_CRYPTOJS_CDN)
 
+        # PWA: manifest, service worker, icons
+        def _media(name: str) -> str | None:
+            return {
+                ".svg": "image/svg+xml",
+                ".js": "application/javascript",
+                ".json": "application/manifest+json",
+                ".png": "image/png",
+            }.get(Path(name).suffix, None)
+
+        for _pwa_name in ("manifest.json", "sw.js", "icon.svg",
+                          "icon-192.png", "icon-512.png"):
+            _pwa_path = STATIC_DIR / _pwa_name
+
+            @app.get("/" + _pwa_name)
+            async def serve_pwa_asset(path=_pwa_path, media=_media(_pwa_name)):
+                if path.exists():
+                    return FileResponse(str(path), media_type=media)
+                return JSONResponse({"error": "asset missing"},
+                                    status_code=404)
+
         @app.get("/login", response_class=HTMLResponse)
         async def login_page():
             return HTMLResponse(self._login_html)

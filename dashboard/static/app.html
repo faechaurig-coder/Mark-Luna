@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JARVIS Dashboard</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#07090f">
   <script src="/static/crypto.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -150,6 +152,8 @@
     <button id="mic-btn" onclick="doMic()" title="Voice command">🎤</button>
     <button class="btn btn-wake" id="wake" onclick="doWake()">WAKE</button>
     <button class="btn btn-send" onclick="doSend()">SEND</button>
+    <button class="btn btn-install" id="install-btn" onclick="doInstall()"
+        title="Instalar como app" style="display:none">⬇ Instalar</button>
   </footer>
 
   <script>
@@ -291,6 +295,37 @@
 
     // Browsers block audio until first touch — init the context on first tap
     document.addEventListener('pointerdown', _initAudioOut, { once: true });
+
+    // ── Service worker registration (PWA) ────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    // ── PWA install prompt ────────────────────────────────────────────────────
+    let _deferredPrompt = null;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      _deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+
+    async function doInstall() {
+      if (!_deferredPrompt) {
+        toast('Instalar no disponible aquí — usa "Instalar" del menú del navegador');
+        return;
+      }
+      _deferredPrompt.prompt();
+      await _deferredPrompt.userChoice;
+      _deferredPrompt = null;
+      installBtn.style.display = 'none';
+    }
+
+    window.addEventListener('appinstalled', () => {
+      toast('JARVIS instalado en tu pantalla de inicio ✔');
+      installBtn.style.display = 'none';
+    });
 
     // ── File helpers ──────────────────────────────────────────────────────────
     function _fileIcon(name) {
