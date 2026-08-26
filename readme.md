@@ -180,6 +180,20 @@ python launch/create_desktop_shortcut.py
 
 Al hacer click arranca el asistente completo.
 
+## 📱 Control del teléfono por voz (Smart Intents)
+
+Con el plugin **`phone_intent`** activado (Plugins → ✓), desde el PC puedes decir:
+
+- 👉 `call:+573001234567` → llamada en tu teléfono (por número)
+- 👉 `sms:+573001234567:estoy ocupado` → SMS al número con mensaje
+- 👉 `wa:+573001234567:hola desde JARVIS` → abrir WhatsApp
+- 👉 `app:instagram` / `url:https://example.com` → abrir app / URL
+- 👉 `copy:texto` → copiar al clipboard
+- 👉 `timer:300` / `timerstop` → temporizador
+- 👉 `alarm:07:30` / `flash:on|off` → alarma / linterna
+
+Cualquier intent se ejecuta con interfaz **nati va** del teléfono (sin instalar nada extra). Si no hay teléfono conectado queda en la cola local y arranca al aparecer.
+
 > ⚠️ **Nota de Instalación:** Algunas dependencias específicas del SO no se empaquetan en `requirements.txt` para mantener el repo ligero. Si te sale `ModuleNotFoundError`, instala el paquete faltante con `pip install <nombre_paquete>`.
 
 ---

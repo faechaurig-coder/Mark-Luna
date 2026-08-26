@@ -56,14 +56,16 @@ class PluginRegistry:
         return name in self._plugins
 
     # -- called by main.py from _execute_tool's else branch --
-    def run(self, name: str, parameters: dict, player=None, session_memory=None) -> str:
+    def run(self, name: str, parameters: dict, player=None, session_memory=None,
+            dashboard_push=None) -> str:
         rec = self._plugins.get(name)
         if rec is None or not rec.valid:
             return f"Plugin '{name}' is not available."
         if not get_plugin_enabled(name):
             return f"The '{name}' plugin is currently disabled."
         try:
-            return _call_run(rec.run, parameters, player, session_memory) or "Done."
+            return _call_run(rec.run, parameters, player, session_memory,
+                             dashboard_push) or "Done."
         except Exception as e:
             self._logger(f"Plugin '{name}' crashed during run(): {e}")
             traceback.print_exc()
@@ -84,7 +86,7 @@ class PluginRegistry:
         return out
 
 
-def _call_run(run_fn, parameters, player, session_memory):
+def _call_run(run_fn, parameters, player, session_memory, dashboard_push=None):
     """Invoke run() passing only the kwargs it actually declares (or all of them
     if it has **kwargs), so a minimal `def run(parameters):` plugin still works."""
     sig = inspect.signature(run_fn)
@@ -94,6 +96,8 @@ def _call_run(run_fn, parameters, player, session_memory):
         kwargs["player"] = player
     if has_var_kw or "session_memory" in sig.parameters:
         kwargs["session_memory"] = session_memory
+    if has_var_kw or "dashboard_push" in sig.parameters:
+        kwargs["dashboard_push"] = dashboard_push
     return run_fn(parameters, **kwargs)
 
 

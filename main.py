@@ -647,6 +647,22 @@ class JarvisLive:
         except Exception as e:
             print(f"[PluginSay] {e}")
 
+    def _dashboard_or_none(self):
+        """Return a callback that queues a message for phone clients,
+        or None when the dashboard server isn't running."""
+        if self._dashboard is None:
+            return None
+
+        def _push(**msg) -> bool:
+            try:
+                asyncio.run_coroutine_threadsafe(
+                    self._dashboard.broadcast(msg), getattr(self, "_loop").loop
+                )
+                return True
+            except Exception:
+                return False
+        return _push
+
     def _make_remote_key(self):
         """Called from Qt main thread when user presses Remote Control."""
         if self._dashboard is None:
@@ -978,7 +994,10 @@ class JarvisLive:
                 if self._plugin_registry.has(name):
                     r = await loop.run_in_executor(
                         None,
-                        lambda: self._plugin_registry.run(name, args, player=self.ui, session_memory=None)
+                        lambda: self._plugin_registry.run(
+                            name, args, player=self.ui, session_memory=None,
+                            dashboard_push=self._dashboard_or_none()
+                        )
                     )
                     result = r or "Done."
                 else:

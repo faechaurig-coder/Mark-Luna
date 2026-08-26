@@ -224,7 +224,72 @@
       if (m.type === 'wake')          sys('Wake word detected — connecting…');
       if (m.type === 'sys')           sys(m.text);
       if (m.type === 'file_received') _onFileReceived(m);
+      if (m.type === 'phone_intent')  _executePhoneIntent(m.command);
     };
+
+    // ── Smart intents coming from the PC (voice plugin) ────────────────────
+    function _executePhoneIntent(command) {
+      const [kind, ...rest] = command.split(':');
+      const payload = rest.join(':');
+      const shown = `${kind} → ${payload || '(no arg)'}`;
+      sys(`📱 Phone intent: ${command}`);
+
+      switch (kind) {
+        case 'call':       location.href = `tel:${encodeURIComponent(payload)}`; break;
+        case 'sms':        {
+          const [to, body] = payload.split(':', 2);
+          location.href = `sms:${encodeURIComponent(to)}${body ? '?body=' + encodeURIComponent(body) : ''}`;
+          break;
+        }
+        case 'wa':         {
+          const [to, body] = payload.split(':', 2);
+          window.open(`https://wa.me/${to.replace(/[^0-9]/g,'')}${body ? '?text=' + encodeURIComponent(body) : ''}`, '_blank');
+          break;
+        }
+        case 'app':        {
+          const schemes = {
+            camera: 'unsplash://app?action=camera', maps: 'geo:', instagram: 'instagram://',
+            spotify: 'spotify:', whatsapp: 'whatsapp://', gmail: 'mailto:',
+            youtube: 'vnd.youtube://', telegram: 'tg://',
+          };
+          const name = payload.toLowerCase();
+          location.href = schemes[name] || `intent://app?package=#Intent;scheme=android;end`;
+          break;
+        }
+        case 'url':        window.open(payload, '_blank'); break;
+        case 'timer':      {
+          const secs = parseInt(payload, 10) || 60;
+          if (secs > 0 && !isNaN(secs)) {
+            setTimeout(() => toast(`⏰ Timer ${secs}s done!`), secs * 1000);
+            sys(`⏰ Timer ${secs}s set`);
+          }
+          break;
+        }
+        case 'timerstop':  sys('⏰ Timer cancelled'); break;
+        case 'alarm':      {
+          const [h, m] = (payload || '07:30').split(':').map(s => parseInt(s, 10));
+          const now = new Date(), alarm = new Date();
+          alarm.setHours(h, m, 0, 0);
+          if (alarm < now) alarm.setDate(alarm.getDate() + 1);
+          const ms = alarm - now;
+          setTimeout(() => sys(`⏰ Alarm ${(payload || '07:30')} → wake up!`), ms);
+          sys(`⏰ Alarm in ${Math.round(ms/60000)}min`);
+          break;
+        }
+        case 'flash':      {
+          if (payload === 'on') document.body.classList.add('flash-on');
+          else document.body.classList.remove('flash-on');
+          toast(payload === 'on' ? '🔦 Flash ON (test mode)' : '🔦 Flash OFF');
+          break;
+        }
+        case 'copy':       navigator.clipboard?.writeText(payload).then(() => toast('📋 Copied to clipboard')); break;
+        default:           sys(`Unknown phone intent: ${command}`);
+      }
+
+      if (kind && !['timer', 'alarm', 'flash', 'copy', 'timerstop'].includes(kind)) {
+        // some intents actually redirect (call/sms/wa/url/app); no feedback beyond sys()
+      }
+    }
 
     function setStatus(s) {
       if (s === 'active') {
