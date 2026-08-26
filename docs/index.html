@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07090f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>JARVIS</title>
+<style>
+  :root { --c: #54e8ff; --bg: #07090f; --amp: 0; }
+  * { margin:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    background: radial-gradient(ellipse at 50% -10%, #0e1626 0%, var(--bg) 60%);
+    color:#cfe6f5; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    display:flex; flex-direction:column; height:100dvh; overflow:hidden;
+  }
+  header {
+    display:flex; align-items:center; gap:8px; padding:10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    border-bottom:1px solid #16232f;
+  }
+  header h1 { font-size:15px; letter-spacing:4px; color:var(--c); font-weight:600; flex:1; }
+  header h1 small { font-size:9px; letter-spacing:1px; color:#4a6379; font-weight:400; }
+  .hbtn {
+    background:#0d1622; border:1px solid #1c3040; color:#8fb6cf;
+    border-radius:10px; padding:7px 11px; font-size:13px; cursor:pointer;
+  }
+  .hbtn:active { background:#16293c; }
+  #installBar {
+    display:none; margin:0 14px; padding:9px 14px; background:#0e2636;
+    border:1px solid #1f4a63; border-radius:12px; font-size:13px; text-align:center;
+  }
+  #installBar button {
+    background:var(--c); border:none; color:#032430; font-weight:700;
+    border-radius:8px; padding:6px 14px; margin-left:10px; cursor:pointer;
+  }
+  #reactorWrap { position:relative; height:240px; display:flex; align-items:center; justify-content:center; }
+  .reactor {
+    width:190px; height:190px; border-radius:50%; position:relative;
+    transform: scale(calc(1 + var(--amp)*0.25));
+    transition: transform 0.08s linear;
+  }
+  .reactor .core {
+    position:absolute; inset:30px; border-radius:50%;
+    background: radial-gradient(circle, #e8fbff 0%, var(--c) 35%, #1a4a63 70%, #07141d 100%);
+    box-shadow: 0 0 calc(30px + var(--amp)*60px) var(--c);
+  }
+  .reactor svg { position:absolute; inset:0; width:100%; height:100%; animation:spin 8s linear infinite; }
+  .reactor svg circle { fill:none; stroke:var(--c); stroke-width:2; stroke-dasharray:12 22; opacity:.6; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #status { text-align:center; font-size:13px; color:#7ba4bd; margin-top:-6px; min-height:18px; }
+  #transcript { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+  .msg { max-width:85%; padding:9px 13px; border-radius:14px; font-size:14px; line-height:1.4; }
+  .msg.user { align-self:flex-end; background:#15324a; border:1px solid #23506c; }
+  .msg.jarvis { align-self:flex-start; background:#0c1a26; border:1px solid #1b3550; color:#a8e6ff; }
+  .msg.sys { align-self:center; background:transparent; color:#556f82; font-size:12px; border:none; }
+  #controls {
+    display:flex; justify-content:center; align-items:center; gap:18px;
+    padding:14px; padding-bottom:max(14px, env(safe-area-inset-bottom));
+  }
+  #bigBtn {
+    width:72px; height:72px; border-radius:50%; border:none; cursor:pointer;
+    background:radial-gradient(circle at 30% 30%, #7ef, #129); color:#001;
+    font-size:28px; box-shadow:0 0 25px rgba(84,232,255,.5);
+  }
+  #bigBtn.off { background:radial-gradient(circle at 30% 30%, #345, #123); box-shadow:none; }
+  .cbtn {
+    width:48px; height:48px; border-radius:50%; background:#0d1622;
+    border:1px solid #1c3040; color:#8fb6cf; font-size:18px; cursor:pointer;
+  }
+  .modal {
+    position:fixed; inset:0; background:rgba(3,7,12,.85); display:none;
+    align-items:flex-end; z-index:50;
+  }
+  .modal.open { display:flex; }
+  .sheet {
+    background:#0b131c; width:100%; max-height:88dvh; overflow-y:auto;
+    border-radius:20px 20px 0 0; border-top:1px solid #1c3040; padding:20px;
+  }
+  .sheet h2 { color:var(--c); font-size:16px; letter-spacing:2px; margin-bottom:14px; }
+  .sheet label { display:block; font-size:12px; color:#6d8ba0; margin:12px 0 5px; }
+  .sheet input, .sheet select {
+    width:100%; background:#101c28; border:1px solid #22394d; color:#cfe6f5;
+    border-radius:10px; padding:11px; font-size:14px;
+  }
+  .sheet .row { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:10px; }
+  .switch { position:relative; width:48px; height:26px; }
+  .switch input { width:48px; height:26px; opacity:0; margin:0; position:absolute; z-index:2; cursor:pointer; }
+  .pill { position:absolute; inset:0; background:#1b2c3c; border-radius:20px; transition:.2s; }
+  .pill::after { content:''; position:absolute; width:20px; height:20px; border-radius:50%; background:#58768c; top:3px; left:3px; transition:.2s; }
+  .switch input:checked + .pill { background:#146083; }
+  .switch input:checked + .pill::after { left:25px; background:var(--c); }
+  .btn {
+    width:100%; margin-top:16px; padding:13px; border:none; border-radius:12px;
+    background:var(--c); color:#032430; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  .btn.gray { background:#1b2c3c; color:#9fc0d4; }
+  #remList .r { display:flex; justify-content:space-between; background:#101c28; border:1px solid #22394d; border-radius:10px; padding:9px 12px; margin-top:8px; font-size:13px; }
+  #remList .r button { background:none; border:none; color:#ff7b7b; font-size:15px; cursor:pointer; }
+  #toast {
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%);
+    background:#10303f; border:1px solid #1f5a75; color:#a8e6ff;
+    padding:10px 18px; border-radius:24px; font-size:13px; z-index:80;
+    opacity:0; transition:opacity .3s; pointer-events:none; max-width:90vw; text-align:center;
+  }
+  #toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>J A R V I S<br><small id="ver">v…</small></h1>
+  <button class="hbtn" id="btnUpdate">🔄 Actualizar</button>
+  <button class="hbtn" id="btnCfg">⚙️</button>
+</header>
+
+<div id="installBar">📲 Instala JARVIS en tu celular <button id="btnInstall">Instalar</button></div>
+
+<div id="reactorWrap">
+  <div class="reactor">
+    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg>
+    <div class="core"></div>
+  </div>
+</div>
+<div id="status">Toca el círculo para activar</div>
+
+<div id="transcript"></div>
+
+<div id="controls">
+  <button class="cbtn" id="btnClap">👏</button>
+  <button id="bigBtn" class="off">🎤</button>
+  <button class="cbtn" id="btnMute">🔊</button>
+</div>
+
+<div class="modal" id="cfgModal">
+  <div class="sheet">
+    <h2>AJUSTES</h2>
+    <label>Tu llave de Gemini (gratis en aistudio.google.com/apikey)</label>
+    <input id="inKey" type="password" placeholder="AIza…">
+    <label>Voz de JARVIS</label>
+    <select id="inVoice">
+      <option value="Puck">Puck (masculina suave)</option>
+      <option value="Charon">Charon (masculina grave)</option>
+      <option value="Fenrir">Fenrir (masculina enérgica)</option>
+      <option value="Kore">Kore (femenina)</option>
+      <option value="Aoede">Aoede (femenina suave)</option>
+    </select>
+    <div class="row">
+      <span style="font-size:13px">👏 Despertar con aplausos</span>
+      <span class="switch"><input type="checkbox" id="inClap"><span class="pill"></span></span>
+    </div>
+    <label>Recordatorios</label>
+    <div id="remList"></div>
+    <button class="btn gray" id="btnCloseCfg">Cerrar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const toast = (t, ms=2800) => { const e=$("toast"); e.textContent=t; e.classList.add("show"); setTimeout(()=>e.classList.remove("show"), ms); };
+
+// ---------- Ajustes persistentes ----------
+const cfg = {
+  get key()    { return localStorage.getItem("jv_key") || ""; },
+  set key(v)   { localStorage.setItem("jv_key", v); },
+  get voice()  { return localStorage.getItem("jv_voice") || "Puck"; },
+  set voice(v) { localStorage.setItem("jv_voice", v); },
+  get clap()   { return localStorage.getItem("jv_clap") === "1"; },
+  set clap(v)  { localStorage.setItem("jv_clap", v ? "1" : "0"); },
+};
+$("inKey").value = cfg.key; $("inVoice").value = cfg.voice; $("inClap").checked = cfg.clap;
+["inKey","inVoice","inClap"].forEach(id => $(id).addEventListener("change", save));
+function save() {
+  cfg.key = $("inKey").value.trim(); cfg.voice = $("inVoice").value; cfg.clap = $("inClap").checked;
+  clapCtl(cfg.clap && !live.on);
+}
+
+// ---------- Service worker: actualizaciones ----------
+let swReg = null, deferredInstall = null;
+async function setupSW() {
+  if (!("serviceWorker" in navigator)) return;
+  swReg = await navigator.serviceWorker.register("sw.js");
+  swReg.addEventListener("updatefound", () => {
+    const nw = swReg.installing;
+    nw && nw.addEventListener("statechange", () => {
+      if (nw.state === "installed" && navigator.serviceWorker.controller) {
+        toast("✨ Nueva versión — toca 🔄 Actualizar", 6000);
+      }
+    });
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", () => location.reload());
+  const sw = swReg.active || swReg.waiting || swReg.installing;
+  if (sw) sw.postMessage("GET_VERSION");
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data && e.data.type === "VERSION") $("ver").textContent = "v" + e.data.version;
+  });
+}
+async function checkUpdate() {
+  if (!swReg) { toast("Sin soporte de actualización"); return; }
+  await swReg.update();
+  const waiting = swReg.waiting, installing = swReg.installing;
+  const target = waiting || installing;
+  if (target) { target.postMessage("SKIP_WAITING"); toast("Actualizando…"); }
+  else { toast("✅ Ya tienes la última versión"); }
+}
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); deferredInstall = e; $("installBar").style.display = "block";
+});
+$("btnInstall").onclick = async () => {
+  if (deferredInstall) { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; }
+  $("installBar").style.display = "none";
+};
+window.addEventListener("appinstalled", () => { toast("🎉 JARVIS instalado"); $("installBar").style.display = "none"; });
+
+// ---------- Live API ----------
+const WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
+const MODEL = "models/gemini-2.0-flash-live-001";
+const SYS = `Eres JARVIS, un asistente personal en español. Responde con frases cortas y naturales (es audio en vivo). Tienes herramientas: phone_action para actuar en el teléfono (llamadas, SMS, WhatsApp, abrir apps/URLs, copiar texto, temporizadores) y set_reminder para recordatorios (una vez o diarios). Si el usuario pide algo del teléfono, usa phone_action. Si pide recordar algo, usa set_reminder. Confirma brevemente lo que hagas.`;
+
+const TOOLS = [{ function_declarations: [
+  {
+    name: "phone_action",
+    description: "Ejecuta una acción en el teléfono del usuario",
+    parameters: {
+      type: "object",
+      properties: {
+        kind: { type: "string", enum: ["call","sms","wa","url","app","copy","timer"], description: "call=llamada, sms=mensaje, wa=WhatsApp, url=abrir web, app=abrir app conocida, copy=copiar texto, timer=temporizador" },
+        arg: { type: "string", description: "número/url/nombre de app/texto. Para sms/wa usa 'numero;texto'. Para timer: segundos" }
+      },
+      required: ["kind","arg"]
+    }
+  },
+  {
+    name: "set_reminder",
+    description: "Crea un recordatorio que suena aunque el usuario no esté hablando",
+    parameters: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "qué recordar" },
+        in_minutes: { type: "number", description: "en cuántos minutos (para únicos). Omite si es diario" },
+        daily_time: { type: "string", description: "HH:MM si se repite todos los días" }
+      },
+      required: ["text"]
+    }
+  }
+]}];
+
+const live = {
+  ws:null, on:false, micStream:null, sendCtx:null, playCtx:null, nextStart:0, muted:false,
+  async connect() {
+    if (!cfg.key) { $("cfgModal").classList.add("open"); toast("Primero pon tu llave en ⚙️ Ajustes"); return; }
+    setStatus("Conectando…");
+    try {
+      this.ws = new WebSocket(WS_URL + "?key=" + cfg.key);
+      this.ws.onopen = () => this.setup();
+      this.ws.onmessage = (e) => this.onMsg(e);
+      this.ws.onclose = () => this.disconnect();
+      this.ws.onerror = () => setStatus("Error de conexión");
+    } catch (err) { setStatus("No se pudo conectar"); }
+  },
+  setup() {
+    this.ws.send(JSON.stringify({ setup: {
+      model: MODEL,
+      generationConfig: { responseModalities: ["AUDIO"],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: cfg.voice } } } },
+      systemInstruction: { parts: [{ text: SYS }] },
+      tools: TOOLS,
+      outputAudioTranscription: {},
+      inputAudioTranscription: {}
+    }}));
+  },
+  async onMsg(e) {
+    const m = JSON.parse(e.data);
+    if (m.setupComplete) {
+      this.on = true; uiConnected(); setStatus("🟢 JARVIS activo — habla");
+      await this.startMic();
+      this.sendText("Saluda brevemente y di que estás listo.");
+      return;
+    }
+    if (m.toolCall) { m.toolCall.functionCalls.forEach((fc) => this.runTool(fc)); return; }
+    const sc = m.serverContent; if (!sc) return;
+    if (sc.interrupted) { this.playCtx && this.flush(); }
+    if (sc.modelTurn) for (const p of sc.modelTurn.parts || []) {
+      if (p.inlineData && p.inlineData.data) this.play(p.inlineData.data);
+    }
+    if (sc.outputTranscription && sc.outputTranscription.text) addMsg("jarvis", sc.outputTranscription.text);
+    if (sc.inputTranscription && sc.inputTranscription.text) addMsg("user", sc.inputTranscription.text);
+  },
+  async startMic() {
+    if (!this.micStream) this.micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    this.sendCtx = this.sendCtx || new AudioContext();
+    const src = this.sendCtx.createMediaStreamSource(this.micStream);
+    const proc = this.sendCtx.createScriptProcessor(4096, 1, 1);
+    src.connect(proc); proc.connect(this.sendCtx.destination);
+    proc.onaudioprocess = (e) => {
+      if (!this.on || this.ws.readyState !== 1) return;
+      const inD = e.inputBuffer.getChannelData(0);
+      const ratio = this.sendCtx.sampleRate / 16000;
+      const out = new Int16Array(Math.floor(inD.length / ratio));
+      for (let i = 0; i < out.length; i++) out[i] = Math.max(-32768, Math.min(32767, inD[Math.floor(i*ratio)] * 32768));
+      let bin = ""; const b = new Uint8Array(out.buffer);
+      for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i+0x8000));
+      this.ws.send(JSON.stringify({ realtimeInput: { mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: btoa(bin) }] } }));
+    };
+  },
+  play(b64) {
+    if (this.muted) return;
+    this.playCtx = this.playCtx || new AudioContext();
+    const bin = atob(b64); const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const pcm = new Int16Array(u8.buffer);
+    const ratio = 24000 / this.playCtx.sampleRate;
+    const floats = new Float32Array(Math.ceil(pcm.length / ratio));
+    let peak = 0;
+    for (let i = 0; i < floats.length; i++) {
+      const v = pcm[Math.floor(i * ratio)] / 32768;
+      floats[i] = v; if (Math.abs(v) > peak) peak = Math.abs(v);
+    }
+    const buf = this.playCtx.createBuffer(1, floats.length, this.playCtx.sampleRate);
+    buf.getChannelData(0).set(floats);
+    const src = this.playCtx.createBufferSource(); src.buffer = buf;
+    src.connect(this.playCtx.destination);
+    const now = this.playCtx.currentTime;
+    if (this.nextStart < now) this.nextStart = now + 0.05;
+    src.start(this.nextStart); this.nextStart += buf.duration;
+    document.documentElement.style.setProperty("--amp", Math.min(peak, 1));
+  },
+  flush() { this.nextStart = this.playCtx ? this.playCtx.currentTime : 0; },
+  sendText(t) { this.ws.readyState === 1 && this.ws.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: t }] }], turnComplete: true } })); },
+  runTool(fc) {
+    let result;
+    try { result = execTool(fc.name, fc.args || {}); }
+    catch (err) { result = { error: String(err.message || err) }; }
+    this.ws.send(JSON.stringify({ toolResponse: { functionResponses: [{ id: fc.id, name: fc.name, response: { result } }] } }));
+  },
+  disconnect() {
+    this.on = false; this.ws = null; uiDisconnected(); setStatus("Desconectado — toca el círculo");
+    clapCtl(cfg.clap);
+  }
+};
+
+// ---------- Herramientas ----------
+const KNOWN_APPS = { whatsapp:"https://wa.me/", instagram:"https://instagram.com", youtube:"https://youtube.com", spotify:"https://open.spotify.com", facebook:"https://facebook.com", gmail:"https://mail.google.com", maps:"https://maps.google.com", tiktok:"https://tiktok.com" };
+function execTool(name, args) {
+  if (name === "set_reminder") return addReminder(args);
+  if (name === "phone_action") return phoneAction(args);
+  return { error: "herramienta desconocida" };
+}
+function phoneAction({ kind, arg }) {
+  const [a, b] = String(arg || "").split(";");
+  switch (kind) {
+    case "call": window.open("tel:" + a); return { ok: "Llamando a " + a };
+    case "sms":  window.open("sms:" + a + (b ? "?body=" + encodeURIComponent(b) : "")); return { ok: "SMS listo para " + a };
+    case "wa":   { const num = a.replace(/\D/g, ""); window.open("https://wa.me/" + num + (b ? "?text=" + encodeURIComponent(b) : "")); return { ok: "Abriendo WhatsApp" }; }
+    case "url":  window.open(a.startsWith("http") ? a : "https://" + a); return { ok: "Abriendo " + a };
+    case "app":  { const k = Object.keys(KNOWN_APPS).find(k => a.toLowerCase().includes(k));
+                   if (k) { window.open(KNOWN_APPS[k]); return { ok: "Abriendo " + k }; }
+                   return { error: "No conozco esa app todavía" }; }
+    case "copy": navigator.clipboard && navigator.clipboard.writeText(arg); return { ok: "Copiado al portapapeles" };
+    case "timer": { const sec = parseInt(a) || 60;
+                    setTimeout(() => { toast("⏰ ¡Temporizador!", 6000); navigator.vibrate && navigator.vibrate([300,150,300,150,300]); speak("¡Tiempo terminado!"); }, sec*1000);
+                    return { ok: "Temporizador de " + sec + " segundos activado" }; }
+  }
+  return { error: "kind inválido" };
+}
+function speak(t) { live.on && live.sendText("[SISTEMA] Dile al usuario: " + t); }
+
+// ---------- Recordatorios ----------
+const rem = {
+  list: JSON.parse(localStorage.getItem("jv_rem") || "[]"),
+  save() { localStorage.setItem("jv_rem", JSON.stringify(this.list)); renderRem(); }
+};
+function addReminder({ text, in_minutes, daily_time }) {
+  let next, repeat = "once";
+  if (daily_time) { const [h, m] = daily_time.split(":"); const d = new Date();
+    d.setHours(+h, +m, 0, 0); if (d < new Date()) d.setDate(d.getDate()+1);
+    next = d.getTime(); repeat = "daily"; }
+  else if (in_minutes) { next = Date.now() + in_minutes * 60000; }
+  else return { error: "necesito in_minutes o daily_time" };
+  rem.list.push({ id: Date.now(), text, next, repeat }); rem.save();
+  return { ok: "Recordatorio guardado: " + text + (repeat === "daily" ? " (todos los días " + daily_time + ")" : " en " + in_minutes + " min") };
+}
+function renderRem() {
+  const el = $("remList");
+  el.innerHTML = rem.list.length ? "" : '<div style="font-size:12px;color:#556f82;margin-top:6px">Sin recordatorios activos</div>';
+  rem.list.forEach((r) => {
+    const d = new Date(r.next);
+    const when = r.repeat === "daily" ? "Diario " + d.toTimeString().slice(0,5) : d.toLocaleString("es", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+    const div = document.createElement("div"); div.className = "r";
+    div.innerHTML = '<span>⏰ ' + r.text + '<br><small style="color:#556f82">' + when + '</small></span>';
+    const b = document.createElement("button"); b.textContent = "✕";
+    b.onclick = () => { rem.list = rem.list.filter(x => x.id !== r.id); rem.save(); };
+    div.appendChild(b); el.appendChild(div);
+  });
+}
+setInterval(() => {
+  const now = Date.now();
+  rem.list.forEach((r) => {
+    if (now >= r.next) {
+      toast("⏰ " + r.text, 8000); navigator.vibrate && navigator.vibrate([200,100,200]);
+      if ("Notification" in window && Notification.permission === "granted") new Notification("JARVIS", { body: "⏰ " + r.text });
+      if (Notification.permission === "default") Notification.requestPermission();
+      speak("[RECORDATORIO] " + r.text);
+      if (r.repeat === "daily") { const d = new Date(); d.setDate(d.getDate()+1); const t = new Date(r.next); d.setHours(t.getHours(), t.getMinutes(), 0, 0); r.next = d.getTime(); }
+      else rem.list = rem.list.filter(x => x.id !== r.id);
+      rem.save();
+    }
+  });
+}, 10000);
+
+// ---------- Aplausos ----------
+let clapAn = null, clapTim = null, claps = [];
+function clapCtl(on) {
+  if (!on) { clapAn = null; $("btnClap").style.borderColor = "#1c3040"; return; }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+    live.micStream = stream;
+    const ctx = new AudioContext(); const src = ctx.createMediaStreamSource(stream);
+    const an = ctx.createAnalyser(); an.fftSize = 512; src.connect(an); clapAn = an;
+    $("btnClap").style.borderColor = "var(--c)";
+    const data = new Float32Array(an.fftSize);
+    clapTim = setInterval(() => {
+      an.getFloatTimeDomainData(data);
+      let peak = 0; for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+      if (peak > 0.55) { claps.push(Date.now()); if (claps.length > 4) claps.shift(); }
+      const two = claps.length >= 2 && claps[claps.length-1] - claps[0] < 1500;
+      if (two && !live.on) { claps = []; live.connect(); }
+    }, 60);
+  }).catch(() => toast("Sin permiso de micrófono para 👏"));
+}
+
+// ---------- UI ----------
+function setStatus(t) { $("status").textContent = t; }
+function addMsg(who, t) {
+  if (!t || !t.trim()) return;
+  const last = $("transcript").lastElementChild;
+  if (last && last.classList.contains(who)) { last.textContent += t; }
+  else { const d = document.createElement("div"); d.className = "msg " + who; d.textContent = t; $("transcript").appendChild(d); }
+  $("transcript").scrollTop = $("transcript").scrollHeight;
+}
+function uiConnected() { $("bigBtn").classList.remove("off"); $("bigBtn").textContent = "🎤"; clapCtl(false); }
+function uiDisconnected() { $("bigBtn").classList.add("off"); $("bigBtn").textContent = "🎤"; }
+$("bigBtn").onclick = () => live.on ? live.disconnect() && live.ws.close() : live.connect();
+$("btnMute").onclick = () => { live.muted = !live.muted; $("btnMute").textContent = live.muted ? "🔇" : "🔊"; };
+$("btnClap").onclick = () => { cfg.clap = !cfg.clap; $("inClap").checked = cfg.clap; toast(cfg.clap ? "👏 Aplausos activados" : "Aplausos desactivados"); if (!live.on) clapCtl(cfg.clap); };
+$("btnCfg").onclick = () => $("cfgModal").classList.add("open");
+$("btnCloseCfg").onclick = () => $("cfgModal").classList.remove("open");
+$("btnUpdate").onclick = checkUpdate;
+$("ver").textContent = "v…";
+
+// ---------- Inicio ----------
+setupSW(); renderRem(); clapCtl(cfg.clap);
+</script>
+</body>
+</html>
