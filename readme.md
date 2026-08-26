@@ -1,103 +1,103 @@
 # ⚙️ MARK LI (51)
-### The Ultimate Cross-Platform Personal AI Assistant — By FatihMakes
+### El Asistente Personal de IA Definitivo Multiplataforma — Por FatihMakes
 
-> 📺 **[Watch the full setup video on YouTube](https://www.youtube.com/@FatihMakes)**
+> 📺 **[Mira el video completo de instalación en YouTube](https://www.youtube.com/@FatihMakes)**
 
-A real-time voice AI that can hear, see, understand, and control your computer — on any OS. Supports Windows, macOS, and Linux. Built on the Gemini Live API for native audio streaming, delivering zero subscriptions and total digital autonomy.
-
----
-
-## ✨ Overview
-
-MARK LI is the final form of the core: an assistant you extend without ever touching its engine. Drop a single plugin file into the `plugins/` folder and JARVIS learns a new skill on the next launch — no code changes, no configuration, no risk. On top of that, the voice itself got smarter: JARVIS now hears the emotion in your voice, knows when you're talking to someone else in the room and stays silent, and can hold one conversation for hours without losing the thread.
-
-It's not just an assistant — it's an extension of your digital life.
+Una IA de voz en tiempo real que puede oír, ver, entender y controlar tu computadora — en cualquier SO. Compatible con Windows, macOS y Linux. Construido sobre la API Gemini Live para streaming de audio nativo, sin suscripciones y con autonomía digital total.
 
 ---
 
-## 🚀 Capabilities
+## ✨ Visión General
 
-### Core Features
-| Feature | Description |
+MARK LI es la forma final del núcleo: un asistente que extiendes sin tocar jamás su motor. Suelta un solo archivo de plugin en la carpeta `plugins/` y JARVIS aprende una nueva habilidad en el siguiente arranque — sin cambios de código, sin configuración, sin riesgos. Y la voz también mejoró: JARVIS ahora oye la emoción en tu voz, sabe cuándo le estás hablando a otra persona en la habitación y se queda en silencio, y puede mantener una conversación por horas sin perder el hilo.
+
+No es solo un asistente — es una extensión de tu vida digital.
+
+---
+
+## 🚀 Capacidades
+
+### Funciones Principales
+| Función | Descripción |
 |---|---|
-| 🧩 Plugin System | Drop a single `.py` file into `plugins/` — JARVIS learns a new skill on next launch |
-| 🎙️ Real-time Voice | Ultra-low latency conversation in any language via Gemini Live API |
-| 💓 Affective Dialog | Hears the emotion in your voice and adapts its tone in response |
-| 🤫 Proactive Audio | Knows when you're not talking to it — background chatter never triggers a reply |
-| ♾️ Unlimited Sessions | Sliding-window context compression — one conversation can last for hours |
-| 🖥️ System Control | Launch apps, adjust volume/brightness, WiFi, shortcuts, power — all by voice |
-| 🧩 Autonomous Tasks | High-level planning for complex multi-step goals via agent mode |
-| 👁️ Visual Awareness | Real-time screen capture and webcam vision piped into your main Gemini session |
-| 🧠 Persistent Memory | Deeply remembers projects, preferences, and personal context across sessions |
-| ⌨️ Hybrid Input | Seamlessly switch between keyboard typing and voice commands |
-| 🌅 Morning Briefing | On first boot: greets you, reads the time, recaps yesterday, and fetches live news |
-| 🔔 Proactive 2.0 | Time-aware, context-aware check-ins — knows the time of day, your projects, and what you've been discussing |
-| 🗓️ Session Memory | Summarises each conversation and mentions it naturally next morning — consumed after use, never repeats |
-| 👁️‍🗨️ Background Monitoring | User-configured topic watching — checks for new headlines once a day and alerts naturally |
-| 📊 Hardware Monitoring | Continuous CPU, RAM, GPU and temperature telemetry with localized voice alerts |
-| 🌤️ Weather Report | Live weather data for your city, personalized from memory |
-| 🗺️ Dynamic Content Panel | Scrollable display layer beneath the HUD that renders web results, news, and search data |
-| 🔍 Multi-Mode Web Search | `news` / `research` / `price` / `compare` / `search` — Gemini Grounded first, DDG fallback |
-| ⏰ Smart Reminders | OS-native scheduled notifications (Windows Task Scheduler / macOS LaunchAgent / Linux systemd) |
-| ✈️ Flight Finder | Live flight price and availability lookup |
-| 🎮 Game Updater | Checks and triggers game updates on Steam and Epic Games on demand |
-| 📂 File Processor | Read, summarize, and answer questions about local files |
-| 💻 Code Helper | Inline code review, debugging, and generation |
-| 🌐 Browser Control | Open URLs, navigate tabs, and interact with the browser by voice |
-| 📨 Send Message | Compose and send messages through WhatsApp, Telegram, and more |
-| 🎬 YouTube Control | Search, play, and control YouTube playback by voice |
-| 🖱️ Desktop Control | Taskbar, window management, and desktop-level operations |
-| 🧑‍💻 Silent Language Memory | Detects spoken language on first use — all future sessions adapt automatically |
-| 📱 Remote Dashboard | Control the assistant from your phone via QR code pairing |
-| ⚡ Auto-Start on Boot | Registers with the OS startup system (registry / LaunchAgent / .desktop) |
-| 📋 Clipboard Intelligence | Copy any text → floating panel with Translate / Summarise / Explain / Fix |
-| 🎨 Assistant Customization | Change the assistant name and your name from the UI — takes effect immediately |
-| 👏 Clap Activation | Wake with a clap, interrupt with a clap, unmute with a clap — no voice needed |
-| 🗣️ Custom Voice | Pick from 10 Gemini prebuilt voices — male and female |
-| ⏰ Recurring Reminders | Daily/weekly loops via OS schedulers — fires even when JARVIS is offline |
-| 📱 Phone Playback | JARVIS's voice streams to your phone — hear it on your headphones |
+| 🧩 Sistema de Plugins | Suelta un archivo `.py` en `plugins/` — JARVIS aprende una habilidad nueva al siguiente arranque |
+| 🎙️ Voz en Tiempo Real | Conversación de latencia ultra-baja en cualquier idioma vía API Gemini Live |
+| 💓 Diálogo Afectivo | Oye la emoción en tu voz y adapta su tono en respuesta |
+| 🤫 Audio Proactivo | Sabe cuándo no le hablas — el ruido de fondo nunca dispara respuesta |
+| ♾️ Sesiones Ilimitadas | Compresión de contexto con ventana deslizante — una conversación puede durar horas |
+| 🖥️ Control del Sistema | Abre apps, ajusta volumen/brillo, WiFi, atajos, energía — todo con la voz |
+| 🤖 Tareas Autónomas | Planificación de alto nivel para objetivos complejos de varios pasos, vía modo agente |
+| 👁️ Consciencia Visual | Captura de pantalla y visión por cámara en tiempo real enviada a tu sesión Gemini |
+| 🧠 Memoria Persistente | Recuerda proyectos, preferencias y contexto personal entre sesiones |
+| ⌨️ Entrada Híbrida | Alterna con fluidez entre teclado y comandos de voz |
+| 🌅 Briefing Matutino | Al primer arranque: te saluda, te da la hora, recuerda tu ayer y trae noticias en vivo |
+| 🔔 Proactivo 2.0 | Recordatorios conscientes de tiempo y contexto — sabe la hora, tus proyectos y qué hablabas |
+| 🗓️ Memoria de Sesión | Resume cada conversación y la menciona naturalmente la mañana siguiente — se consume al usarla |
+| 👁️‍🗨️ Monitoreo de Fondo | Vigilancia de temas configurada por ti — revisa titulares una vez al día y avisa naturalmente |
+| 📊 Monitoreo de Hardware | Telemetría continua de CPU, RAM, GPU y temperatura con alertas de voz localizadas |
+| 🌤️ Reporte del Clima | Datos del clima en vivo para tu ciudad, personalizados desde tu memoria |
+| 🗺️ Panel de Contenido Dinámico | Capa de visualización desplazable bajo el HUD que muestra web, noticias y búsquedas |
+| 🔍 Búsqueda Web Multimodo | `noticias` / `investigación` / `precio` / `comparar` — Gemini Grounded primero, DuckDuckGo como respaldo |
+| ⏰ Recordatorios Inteligentes | Notificaciones programadas nativas del SO (Task Scheduler / LaunchAgent / systemd) |
+| ✈️ Buscador de Vuelos | Consulta de precios y disponibilidad de vuelos en vivo |
+| 🎮 Actualizador de Juegos | Verifica y activa actualizaciones en Steam y Epic Games bajo demanda |
+| 📂 Procesador de Archivos | Lee, resume y responde preguntas sobre archivos locales |
+| 💻 Ayudante de Código | Revisión, depuración y generación de código en línea |
+| 🌐 Control del Navegador | Abre URLs, navega pestañas e interactúa con el navegador con la voz |
+| 📨 Enviar Mensajes | Compone y envía mensajes por WhatsApp, Telegram y más |
+| 🎬 Control de YouTube | Busca, reproduce y controla YouTube con la voz |
+| 🖱️ Control del Escritorio | Barra de tareas, gestión de ventanas y operaciones de nivel escritorio |
+| 🧑‍💻 Memoria Silenciosa de Idioma | Detecta el idioma hablado en el primer uso — todas las sesiones futuras se adaptan automáticamente |
+| 📱 Panel Remoto | Controla el asistente desde tu teléfono con pareo por QR |
+| ⚡ Auto-Arranque al Boot | Registra con el sistema de arranque del SO (registro / LaunchAgent / .desktop) |
+| 📋 Inteligencia de Portapapeles | Copia cualquier texto → panel flotante con Traducir / Resumir / Explicar / Corregir |
+| 🎨 Personalización del Asistente | Cambia el nombre del asistente y el tuyo desde la UI — efecto inmediato |
+| 👏 Activación por Aplauso | Despierta, interrumpe y desmutea con un aplauso — sin voz necesaria |
+| 🗣️ Voz Personalizada | Elige entre 10 voces preconstruidas de Gemini — masculinas y femeninas |
+| ⏰ Recordatorios Recurrentes | Bucles diarios/semanales vía planificadores del SO — suenan aunque JARVIS esté offline |
+| 📱 Reproducción en Teléfono | La voz de JARVIS se transmite a tu teléfono — escúchala en tus audífonos |
 
 ---
 
-## 🆕 What's New in Mark LI
+## 🆕 Qué Hay de Nuevo en Mark LI
 
-### 🧩 Plugin System — Extend JARVIS Without Touching a Single Core File
-The headline feature of Mark LI, and the reason it's the final architecture version. Every new capability from now on ships as a single `.py` file:
+### 🧩 Sistema de Plugins — Extiende JARVIS Sin Tocar el Núcleo
+La función estrella de Mark LI, y la razón de ser la versión de arquitectura final. Toda nueva capacidad, de ahora en adelante, llega como un solo archivo `.py`:
 
-1. Download a plugin file (e.g. `calorie_counter.py`)
-2. Drop it into the `plugins/` folder
-3. Restart JARVIS — done. The skill is live, by voice, in any language.
+1. Descarga un archivo de plugin (p.ej. `contador_calorias.py`)
+2. Suelta en la carpeta `plugins/`
+3. Reinicia JARVIS — listo. La habilidad está viva, por voz, en cualquier idioma.
 
-Each plugin declares its own Gemini tool schema and logic in one file. The engine auto-discovers it at startup, registers it with the Live session, and lists it in the new **🧩 Plugin Manager** panel where every plugin gets its own persistent ON/OFF toggle.
+Cada plugin declara su propio esquema de herramienta Gemini y lógica en un archivo. El motor lo auto-descubre al arranque, lo registra en la sesión Live y lo lista en el panel **🧩 Administrador de Plugins** donde cada plugin tiene su interruptor persistente ON/OFF.
 
-Safety is built in at three layers: a broken or badly written plugin can **never** crash JARVIS — it simply shows up as "BROKEN" in the manager with the error explained, while every other tool and plugin keeps working. Name collisions with core tools are detected and rejected automatically. Want to write your own? Copy `plugins/_template.py` and fill in two things: the `PLUGIN` dict and the `run()` function.
+La seguridad está en tres capas: un plugin roto o mal escrito **jamás** puede tumbar a JARVIS — simplemente aparece como "ROTO" en el administrador con el error explicado, mientras las demás herramientas y plugins siguen funcionando. Las colisiones de nombre con las herramientas del núcleo se detectan y se rechazan automáticamente. ¿Quieres crear el tuyo? Copia `plugins/_template.py` y rellena dos cosas: el dict `PLUGIN` y la función `run()`.
 
-### 💓 Affective Dialog — JARVIS Hears How You Feel
-Powered by Gemini Live's native audio understanding, JARVIS now picks up the emotion in your voice — excitement, frustration, fatigue — and adapts its own tone in response. Late-night tired questions get calm answers; excited announcements get energy back.
+### 💓 Diálogo Afectivo — JARVIS Oye Cómo Te Sientes
+Gracias a la comprensión nativa de audio de Gemini Live, JARVIS ahora detecta la emoción en tu voz — emoción, frustración, fatiga — y adapta su tono en respuesta. Las preguntas nocturnas cansadas obtienen respuestas calmadas; los anuncios emocionados reciben energía de vuelta.
 
-### 🤫 Proactive Audio — Knows When You're Not Talking to It
-The biggest quality-of-life upgrade for an always-listening assistant: JARVIS can now tell when speech isn't addressed to it. Talking to someone in the room, taking a phone call, TV in the background — it stays silent instead of interjecting. No wake word needed, no accidental replies.
+### 🤫 Audio Proactivo — Sabe Cuándo No Le Hablas
+La mejora de calidad de vida más grande para un asistente que escucha siempre: JARVIS ahora puede decir cuándo el habla no va dirigida a él. Hablar con alguien en la habitación, tomar una llamada, la TV de fondo — permanece en silencio en vez de interponerse. Sin palabra de activación necesaria, sin respuestas accidentales.
 
-### ♾️ Unlimited Session Length — The Conversation Never Dies
-Sliding-window context compression means the Live session no longer terminates when the context window fills up. Combined with session resumption, JARVIS holds one continuous conversation for hours without losing the thread.
+### ♾️ Longitud de Sesión Ilimitada — La Conversación Nunca Muere
+La compresión de contexto con ventana deslizante significa que la sesión Live ya no termina cuando se llena la ventana de contexto. Combinado con la reanudación de sesión, JARVIS mantiene una conversación continua por horas sin perder el hilo.
 
-All three Live API upgrades degrade gracefully: if the preview API ever rejects them, JARVIS automatically reconnects with the standard configuration — users never see a crash.
+Las tres mejoras de la API Live se degradan con gracia: si la API de vista previa llega a rechazarlas, JARVIS se reconecta automáticamente con la configuración estándar — nunca ves un fallo.
 
 ---
 
-## 🆕 What's New Here (fork upgrades)
+## 🆕 Novedades de Este Fork (mejoras propias)
 
-### 👏 Clap Activation — Wake and Interrupt without Speaking
+### 👏 Activación por Aplauso — Despierta e Interrumpe sin Hablar
 
-One clap wakes JARVIS. Clap again while it's talking and it stops instantly. A hard clap is a sharply-peaked, broadband signal, so the detector looks at peak-to-ambient ratio — speech and TV noise don't trip it.
+Un aplauso despierta a JARVIS. Aplaude de nuevo mientras está hablando y se detiene al instante. Un aplauso fuerte es una señal aguda y de banda ancha, así que el detector mira la relación pico-ambiente — el habla y el ruido de la TV no lo activan.
 
-| Gesture | What happens |
+| Gesto | Qué pasa |
 |---|---|
-| 👏 while idle | JARVIS greets you ("Yes, sir?") and starts listening |
-| 👏 while it speaks | Instant interrupt — mic reopens immediately |
-| 👏 while muted | Unmutts the mic + wakes |
+| 👏 en reposo | JARVIS te saluda ("¿Sí, señor?") y empieza a escuchar |
+| 👏 mientras habla | Interrupción instantánea — el micrófono se reabre inmediatamente |
+| 👏 estando en mute | Quita el mute + despierta |
 
-Config keys in `config/api_keys.json`:
+Claves de configuración en `config/api_keys.json`:
 
 ```json
 {
@@ -106,52 +106,52 @@ Config keys in `config/api_keys.json`:
 }
 ```
 
-Sensitivity: `1` = light (baby claps / distant mic), `2` = default, `3` = strict (noisy rooms). Set `clap_activation` to `false` to disable.
+Sensibilidad: `1` = ligera (aplausos suaves / micrófono lejano), `2` = por defecto, `3` = estricta (habitaciones ruidosas). Pon `clap_activation` en `false` para desactivarlo.
 
-### 🗣️ Custom Voice — Pick the Voice You Like
+### 🗣️ Voz Personalizada — Elige la Voz que Te Gusta
 
-Open the **Customize** overlay (⚙️ button in the header) → Voice dropdown → choose from the Gemini nativo-audio prebuilt voices. Applies from the next session. You can also set `"voice_name"` directly in `config/api_keys.json`.
+Abre el **Personalizar** overlay (botón ⚙️ en la barra) → desplegable de Voz → elige entre las voces preconstruidas nativo-audio de Gemini. Se aplica desde la siguiente sesión. También puedes poner `"voice_name"` directamente en `config/api_keys.json`.
 
-| Male voices | Female voices |
+| Voces Masculinas | Voces Femeninas |
 |---|---|
-| Charon (default, deep) | Kore |
+| Charon (por defecto, grave) | Kore |
 | Puck | Aoede |
 | Orus | Leda |
 | Fenrir | Zephyr |
 | Achernar | Pulcherrima |
 
-### ⏰ Recurring Reminders — It Reminds You Forever
+### ⏰ Recordatorios Recurrentes — Te Recuerda Para Siempre
 
-The reminder tool now supports `recurrence = "daily" | "weekly"` in addition to one-shot. It persists through OS-native schedulers — **Windows Task Scheduler**, **macOS LaunchAgent**, or **Linux systemd** — so they fire even when JARVIS isn't running.
+La herramienta de recordatorios ahora soporta `recurrence = "daily" | "weekly"` además del unico disparo. Persiste a través de planificadores nativos del SO — **Task Scheduler** en Windows, **LaunchAgent** en macOS o **systemd** en Linux — así que suenan incluso cuando JARVIS no está corriendo.
 
-- "Remind me every day at 8:45 to drink water" → daily loop
-- "Remind me every Friday at 6pm to take out the trash" → weekly loop
+- "Recuérdame todos los días a las 8:45 que tome agua" → bucle diario
+- "Recuérdame cada viernes a las 6pm sacar la basura" → bucle semanal
 
-### 📱 Carry It on Your Phone (With Headphones)
+### 📱 Llévalo en Tu Teléfono (Con Audífonos)
 
-The **Remote Dashboard** (`Remote Control` button → QR code) now plays JARVIS's voice back to your phone over your local network. Pair once and:
+El **Panel Remoto** (botón `Control Remoto` → código QR) ahora reproduce la voz de JARVIS de vuelta a tu teléfono por tu red local. Empareja una vez y:
 
-1. Connect your headphones to the phone
-2. Open the dashboard, tap the screen once (audio unlock)
-3. Tap 🎤 to open a live voice session, or use text
+1. Conecta tus audífonos al teléfono
+2. Abre el panel, toca la pantalla una vez (desbloqueo de audio)
+3. Toca 🎤 para abrir una sesión de voz en vivo, o usa texto
 
-Your phone mic streams in, JARVIS's voice streams back straight into your headphones, and the transcript appears in the feed. PC speakers can be muted independently.
+El micrófono de tu teléfono transmite la entrada, la voz de JARVIS se transmite de vuelta directamente a tus audífonos, y la transcripción aparece en la pantalla. Los altavoces de la PC pueden mutearse independientemente.
 
 ---
 
-## 🗺️ Mark Roadmap
+## 🗺️ Ruta de Marks
 
-| Mark | Focus |
+| Mark | Enfoque |
 |---|---|
-| **XLVIII** | Instant interrupt · parallel news · two-phase briefing · exponential backoff · vision cooldown |
-| **XLIX** | Auto-start · clipboard intelligence · assistant customization |
-| **L** | Session memory · background monitoring · proactive 2.0 · instant vision · parallel news search |
-| **LI** | Plugin system · affective dialog · proactive audio · unlimited sessions |
-| **LII+** | Plugin files: email · quiz mode · calorie counter · calendar · and more |
+| **XLVIII** | Interrupción instantánea · noticias paralelas · briefing de dos fases · retroceso exponencial · espera de visión |
+| **XLIX** | Auto-arranque · inteligencia de portapapeles · personalización del asistente |
+| **L** | Memoria de sesión · monitoreo de fondo · proactivo 2.0 · visión instantánea · búsqueda de noticias paralela |
+| **LI** | Sistema de plugins · diálogo afectivo · audio proactivo · sesiones ilimitadas |
+| **LII+** | Archivos de plugin: correo · modo quiz · contador de calorías · calendario · y más |
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Inicio Rápido
 
 ```bash
 git clone https://github.com/FatihMakes/Mark-LI.git
@@ -160,76 +160,76 @@ pip install -r requirements.txt
 python main.py
 ```
 
-> ⚠️ **Installation Note:** Some OS-specific dependencies are not bundled in `requirements.txt` to keep the repo lightweight. If you hit a `ModuleNotFoundError`, install the missing package with `pip install <module_name>`.
+> ⚠️ **Nota de Instalación:** Algunas dependencias específicas del SO no se empaquetan en `requirements.txt` para mantener el repo ligero. Si te sale `ModuleNotFoundError`, instala el paquete faltante con `pip install <nombre_paquete>`.
 
 ---
 
-## 📋 Requirements
+## 📋 Requerimientos
 
-| Requirement | Details |
+| Requerimiento | Detalles |
 | --- | --- |
-| **OS** | Windows 10/11, macOS, or Linux |
-| **Python** | 3.11 or 3.12 |
-| **Microphone** | Required for voice interaction |
-| **API Key** | Free Gemini API key (`config/api_keys.json`) |
+| **SO** | Windows 10/11, macOS o Linux |
+| **Python** | 3.11 o 3.12 |
+| **Micrófono** | Requerido para interacción por voz |
+| **Clave de API** | Clave Gemini gratuita (`config/api_keys.json`) |
 
 ---
 
-## 🗂️ Project Structure
+## 🗂️ Estructura del Proyecto
 
 ```
 Mark LI/
-├── main.py                   # Core loop — Gemini Live session, audio I/O, tool dispatch
-├── ui.py                     # PyQt6 HUD — waveform, log panel, plugin manager, camera feed
-├── setup.py                  # First-run configuration wizard
+├── main.py                   # Bucle principal — sesión Gemini Live, E/S de audio, despacho de herramientas
+├── ui.py                     # HUD en PyQt6 — forma de onda, panel de logs, administrador de plugins, cámara
+├── setup.py                  # Asistente de configuración de primer arranque
 ├── plugins/
-│   └── _template.py          # Copy this to write a new plugin — one file, drop in, done
+│   └── _template.py          # Copia esto para escribir un plugin nuevo — un archivo, suelda, listo
 ├── actions/
-│   ├── web_search.py         # Gemini + DDG parallel search (news, research, price, compare)
-│   ├── screen_processor.py   # Screen capture & webcam vision via Gemini Live
-│   ├── background_monitor.py # User-configured topic watching — daily DDG check, no crypto
-│   ├── proactive.py          # Proactive 2.0 — time/context/rotation-aware check-ins
-│   ├── reminder.py           # OS-native scheduled notifications
-│   ├── system_monitor.py     # CPU / RAM / GPU / temperature telemetry
-│   ├── computer_settings.py  # Volume, brightness, WiFi, power
-│   ├── computer_control.py   # Keyboard shortcuts, mouse, window management
-│   ├── open_app.py           # Application launcher
-│   ├── browser_control.py    # Web browser control
-│   ├── file_controller.py    # File system operations
-│   ├── file_processor.py     # Document reading and summarization
-│   ├── send_message.py       # Messaging integration
-│   ├── weather_report.py     # Live weather data
-│   ├── flight_finder.py      # Flight search
-│   ├── youtube_video.py      # YouTube playback control
-│   ├── game_updater.py       # Game update management (Steam / Epic)
-│   ├── code_helper.py        # Code review and generation
-│   ├── dev_agent.py          # Developer task agent
-│   └── desktop.py            # Desktop and taskbar control
+│   ├── web_search.py         # Búsqueda paralela Gemini + DDG (noticias, investigación, precio, compara)
+│   ├── screen_processor.py   # Captura de pantalla y visión por cámara vía Gemini Live
+│   ├── background_monitor.py # Vigilancia de temas configurada por ti — revisión DDG diaria, sin cripto
+│   ├── proactive.py          # Proactivo 2.0 — recordatorios conscientes de tiempo/contexto
+│   ├── reminder.py           # Notificaciones programadas nativas del SO
+│   ├── system_monitor.py     # Telemetría de CPU / RAM / GPU / temperatura
+│   ├── computer_settings.py  # Volumen, brillo, WiFi, energía
+│   ├── computer_control.py   # Atajos de teclado, mouse, gestión de ventanas
+│   ├── open_app.py           # Lanzador de aplicaciones
+│   ├── browser_control.py    # Control del navegador web
+│   ├── file_controller.py    # Operaciones del sistema de archivos
+│   ├── file_processor.py     # Lectura y resumen de documentos
+│   ├── send_message.py       # Integración de mensajería
+│   ├── weather_report.py     # Datos del clima en vivo
+│   ├── flight_finder.py      # Búsqueda de vuelos
+│   ├── youtube_video.py      # Control de reproducción de YouTube
+│   ├── game_updater.py       # Gestión de actualizaciones de juegos (Steam / Epic)
+│   ├── code_helper.py        # Revisión y generación de código
+│   ├── dev_agent.py          # Agente de tareas para desarrolladores
+│   └── desktop.py            # Control del escritorio y barra de tareas
 ├── memory/
-│   ├── memory_manager.py     # Load/save long_term.json — sessions, monitors, identity
-│   └── long_term.json        # Persistent store: identity, preferences, projects, sessions, monitors
+│   ├── memory_manager.py     # Carga/guarda long_term.json — sesiones, vigilancias, identidad
+│   └── long_term.json        # Almacén persistente: identidad, preferencias, proyectos, sesiones, vigilancias
 ├── core/
-│   ├── prompt.txt            # Assistant personality and tool-routing rules
-│   └── plugin_loader.py      # Plugin engine — discovery, validation, crash isolation
+│   ├── prompt.txt            # Personalidad del asistente y reglas de enrutamiento de herramientas
+│   └── plugin_loader.py      # Motor de plugins — descubrimiento, validación, aislamiento de fallos
 └── config/
-    └── api_keys.json         # API key, OS setting, assistant name, user name
+    └── api_keys.json         # Clave de API, configuración del SO, nombre asistente, tu nombre
 ```
 
 ---
 
-## ⚠️ License
+## ⚠️ Licencia
 
-Personal and non-commercial use only.
-Licensed under **[Creative Commons BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)**.
+Solo para uso personal y no comercial.
+Licenciado bajo **[Creative Commons BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)**.
 
 ---
 
-## 👤 Connect with the Creator
+## 👤 Conecta con el Creador
 
-Engineered by a developer building a real-world JARVIS-style assistant.
-⭐ **Star the repository to support the journey to Mark 100.**
+Ingeniería de un desarrollador que construye un asistente estilo JARVIS del mundo real.
+⭐ **Dale estrella al repositorio para apoyar el camino a Mark 100.**
 
-| Platform | Link |
+| Plataforma | Enlace |
 | --- | --- |
 | YouTube | [@FatihMakes](https://www.youtube.com/@FatihMakes) |
 | Instagram | [@fatihmakes](https://www.instagram.com/fatihmakes) |
