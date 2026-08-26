@@ -73,6 +73,7 @@ from actions.background_monitor import (
 from actions.web_search        import _news as _fetch_news_sync
 from memory.config_manager     import get_brief_enabled
 from core.plugin_loader        import discover_plugins
+from core.clap_detector        import ClapDetector
 
 def get_base_dir():
     if getattr(sys, "frozen", False):
@@ -187,13 +188,21 @@ TOOL_DECLARATIONS = [
     },
     {
         "name": "reminder",
-        "description": "Sets a timed reminder using Task Scheduler.",
+        "description": (
+            "Sets a timed reminder using the OS scheduler. "
+            "recurrence='daily' or 'weekly' makes it repeat forever; "
+            "default 'once'. Use daily/weekly for routines, habits, meds, etc."
+        ),
         "parameters": {
             "type": "OBJECT",
             "properties": {
                 "date":    {"type": "STRING", "description": "Date in YYYY-MM-DD format"},
                 "time":    {"type": "STRING", "description": "Time in HH:MM format (24h)"},
-                "message": {"type": "STRING", "description": "Reminder message text"}
+                "message": {"type": "STRING", "description": "Reminder message text"},
+                "recurrence": {
+                    "type": "STRING",
+                    "description": "once | daily | weekly (default: once)"
+                }
             },
             "required": ["date", "time", "message"]
         }
@@ -599,6 +608,18 @@ class JarvisLive:
         self.ui.get_plugins = self._plugin_registry.list_for_ui
         self.ui.request_say = self.plugin_say   # plugins: mid-task speech channel
 
+        # Clap wake/interrupt — clap while idle wakes, while speaking interrupts
+        try:
+            _cfg_clap = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            _cfg_clap = {}
+        if _cfg_clap.get("clap_activation", True):
+            sens = int(_cfg_clap.get("clap_sensitivity", 2))
+            self._clap = ClapDetector(sensitivity=sens)
+            print(f"[JARVIS] 👏 Clap activation on (sensitivity={sens})")
+        else:
+            self._clap = None
+
     def plugin_say(self, instruction: str) -> None:
         """
         Thread-safe speech channel for plugins: lets a plugin ask JARVIS to
@@ -677,6 +698,27 @@ class JarvisLive:
             self._turn_done_event.clear()
         self.ui.write_log("SYS: Interrupted — listening...")
 
+    def _on_clap(self) -> None:
+        """Clap handler — called from the mic callback thread."""
+        print("[JARVIS] 👏 Clap detected")
+        if self._is_speaking:
+            self.interrupt()
+            self.ui.write_log("SYS: Clap interrupt.")
+            return
+        if self.ui.muted:
+            self.ui.request_unmute()
+        if self._loop and self.session:
+            self.ui.write_log("SYS: Clap wake — activate.")
+            asyncio.run_coroutine_threadsafe(
+                self.session.send_client_content(
+                    turns={"parts": [{"text":
+                        "[CLAP] The user clapped to get your attention. "
+                        "Greet them and ask what they need."}]},
+                    turn_complete=True,
+                ),
+                self._loop,
+            )
+
     def speak(self, text: str):
         if not self._loop or not self.session:
             return
@@ -701,9 +743,11 @@ class JarvisLive:
             _cfg = json.loads(open(API_CONFIG_PATH, encoding="utf-8").read())
             self._asst_name = (_cfg.get("assistant_name") or "JARVIS").strip()
             _user_name = (_cfg.get("user_name") or "").strip()
+            _voice = (_cfg.get("voice_name") or "Charon").strip()
         except Exception:
             self._asst_name = "JARVIS"
             _user_name = ""
+            _voice = "Charon"
 
         memory     = load_memory()
         mem_str    = format_memory_for_prompt(memory)
@@ -749,7 +793,7 @@ class JarvisLive:
             speech_config=types.SpeechConfig(
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                        voice_name="Charon"
+                        voice_name=_voice
                     )
                 )
             ),
@@ -964,10 +1008,12 @@ class JarvisLive:
         loop = asyncio.get_event_loop()
 
         def callback(indata, frames, time_info, status):
+            data = indata.tobytes()
+            if self._clap and self._clap.feed(data):
+                self._on_clap()
             with self._speaking_lock:
                 jarvis_speaking = self._is_speaking
             if not jarvis_speaking and not self.ui.muted and not self._phone_active:
-                data = indata.tobytes()
                 loop.call_soon_threadsafe(
                     self.out_queue.put_nowait,
                     {"data": data, "mime_type": "audio/pcm"}
@@ -1007,7 +1053,13 @@ class JarvisLive:
                             _audio_data = response.data
                             _SLICE = 2400
                             for _i in range(0, len(_audio_data), _SLICE):
-                                self.audio_in_queue.put_nowait(_audio_data[_i : _i + _SLICE])
+                                _slice = _audio_data[_i : _i + _SLICE]
+                                self.audio_in_queue.put_nowait(_slice)
+                                # mirror to phone (headphone playback) if dashboard active
+                                if self._dashboard and self._dashboard._audio_clients:
+                                    asyncio.create_task(
+                                        self._dashboard.push_audio_out(_slice)
+                                    )
 
                     if response.server_content:
                         sc = response.server_content

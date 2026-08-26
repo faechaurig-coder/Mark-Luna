@@ -143,22 +143,53 @@ except Exception:
     script_path.chmod(0o600)   # owner read/write only
     return script_path
 
+_WEEKDAY_XML = ["Sunday", "Monday", "Tuesday", "Wednesday",
+                "Thursday", "Friday", "Saturday"]
+
+
 def _schedule_windows(target_dt: datetime, task_name: str,
-                      script_path: Path, message: str) -> str:
+                      script_path: Path, message: str,
+                      recurrence: str = "once") -> str:
     python_exe = Path(sys.executable)
     pythonw = python_exe.parent / "pythonw.exe"
     if pythonw.exists():
         python_exe = pythonw
+
+    start = target_dt.strftime("%Y-%m-%dT%H:%M:%S")
+    if recurrence == "daily":
+        trigger = (
+            f'<CalendarTrigger>\n'
+            f'    <StartBoundary>{start}</StartBoundary>\n'
+            '    <Enabled>true</Enabled>\n'
+            '    <ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay>\n'
+            '</CalendarTrigger>'
+        )
+    elif recurrence == "weekly":
+        weekday = _WEEKDAY_XML[int(target_dt.strftime("%w"))]
+        trigger = (
+            f'<CalendarTrigger>\n'
+            f'    <StartBoundary>{start}</StartBoundary>\n'
+            '    <Enabled>true</Enabled>\n'
+            '    <ScheduleByWeek>\n'
+            f'      <DaysOfWeek><{weekday}/></DaysOfWeek>\n'
+            '      <WeeksInterval>1</WeeksInterval>\n'
+            '    </ScheduleByWeek>\n'
+            '</CalendarTrigger>'
+        )
+    else:
+        trigger = (
+            '<TimeTrigger>\n'
+            f'    <StartBoundary>{start}</StartBoundary>\n'
+            '    <Enabled>true</Enabled>\n'
+            '</TimeTrigger>'
+        )
 
     xml_path = _scripts_dir() / f"{task_name}.xml"
     xml_content = (
         '<?xml version="1.0" encoding="UTF-16"?>\n'
         '<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">\n'
         '  <RegistrationInfo><Description>J.A.R.V.I.S Reminder</Description></RegistrationInfo>\n'
-        '  <Triggers><TimeTrigger>\n'
-        f'    <StartBoundary>{target_dt.strftime("%Y-%m-%dT%H:%M:%S")}</StartBoundary>\n'
-        '    <Enabled>true</Enabled>\n'
-        '  </TimeTrigger></Triggers>\n'
+        f'  <Triggers>{trigger}</Triggers>\n'
         '  <Actions><Exec>\n'
         f'    <Command>{python_exe}</Command>\n'
         f'    <Arguments>"{script_path}"</Arguments>\n'
@@ -200,12 +231,34 @@ def _schedule_windows(target_dt: datetime, task_name: str,
 
 
 def _schedule_mac(target_dt: datetime, task_name: str,
-                  script_path: Path) -> str:
+                  script_path: Path, recurrence: str = "once") -> str:
     agents_dir = Path.home() / "Library" / "LaunchAgents"
     agents_dir.mkdir(parents=True, exist_ok=True)
 
     label     = f"com.jarvis.reminder.{task_name}"
     plist_path = agents_dir / f"{label}.plist"
+
+    # once → exact date; daily → hour/minute only; weekly → + weekday (0=Sunday)
+    if recurrence == "daily":
+        interval = (
+            f"    <key>Hour</key>   <integer>{target_dt.hour}</integer>\n"
+            f"    <key>Minute</key> <integer>{target_dt.minute}</integer>\n"
+        )
+    elif recurrence == "weekly":
+        weekday = int(target_dt.strftime("%w"))
+        interval = (
+            f"    <key>Weekday</key> <integer>{weekday}</integer>\n"
+            f"    <key>Hour</key>   <integer>{target_dt.hour}</integer>\n"
+            f"    <key>Minute</key> <integer>{target_dt.minute}</integer>\n"
+        )
+    else:
+        interval = (
+            f"    <key>Year</key>   <integer>{target_dt.year}</integer>\n"
+            f"    <key>Month</key>  <integer>{target_dt.month}</integer>\n"
+            f"    <key>Day</key>    <integer>{target_dt.day}</integer>\n"
+            f"    <key>Hour</key>   <integer>{target_dt.hour}</integer>\n"
+            f"    <key>Minute</key> <integer>{target_dt.minute}</integer>\n"
+        )
 
     plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -220,12 +273,7 @@ def _schedule_mac(target_dt: datetime, task_name: str,
   </array>
   <key>StartCalendarInterval</key>
   <dict>
-    <key>Year</key>   <integer>{target_dt.year}</integer>
-    <key>Month</key>  <integer>{target_dt.month}</integer>
-    <key>Day</key>    <integer>{target_dt.day}</integer>
-    <key>Hour</key>   <integer>{target_dt.hour}</integer>
-    <key>Minute</key> <integer>{target_dt.minute}</integer>
-  </dict>
+{interval}  </dict>
   <key>RunAtLoad</key>         <false/>
   <key>StandardOutPath</key>   <string>/dev/null</string>
   <key>StandardErrorPath</key> <string>/dev/null</string>
@@ -250,10 +298,16 @@ def _schedule_mac(target_dt: datetime, task_name: str,
 
 
 def _schedule_linux(target_dt: datetime, task_name: str,
-                    script_path: Path) -> str:
+                    script_path: Path, recurrence: str = "once") -> str:
+
+    if recurrence == "daily":
+        on_calendar = target_dt.strftime("*-*-* %H:%M:00")
+    elif recurrence == "weekly":
+        on_calendar = target_dt.strftime("%a *-*-* %H:%M:00")
+    else:
+        on_calendar = target_dt.strftime("%Y-%m-%d %H:%M:00")
 
     if shutil.which("systemd-run"):
-        on_calendar = target_dt.strftime("%Y-%m-%d %H:%M:00")
         result = subprocess.run(
             [
                 "systemd-run",
@@ -268,6 +322,10 @@ def _schedule_linux(target_dt: datetime, task_name: str,
         if result.returncode == 0:
             return task_name
         print(f"[Reminder] ⚠️ systemd-run failed: {result.stderr.strip()}, trying 'at'")
+
+    if recurrence != "once":
+        print("[Reminder] ❌ Recurring reminders need systemd (the 'at' fallback only fires once).")
+        return ""
 
     if shutil.which("at"):
         at_time = target_dt.strftime("%H:%M %Y-%m-%d")
@@ -294,6 +352,9 @@ def reminder(
     date_str = parameters.get("date", "").strip()
     time_str = parameters.get("time", "").strip()
     message  = parameters.get("message", "Reminder").strip()
+    recurrence = parameters.get("recurrence", "once").strip().lower()
+    if recurrence not in ("once", "daily", "weekly"):
+        recurrence = "once"
 
     if not date_str or not time_str:
         return "I need both a date and a time to set a reminder."
@@ -303,7 +364,7 @@ def reminder(
     except ValueError:
         return "I couldn't parse that date or time. Please use YYYY-MM-DD and HH:MM."
 
-    if target_dt <= datetime.now():
+    if target_dt <= datetime.now() and recurrence == "once":
         return "That time has already passed — I can't set a reminder in the past."
 
     os_name    = _get_os()
@@ -317,21 +378,28 @@ def reminder(
 
     try:
         if os_name == "windows":
-            job_id = _schedule_windows(target_dt, task_name, script_path, safe_msg)
+            job_id = _schedule_windows(target_dt, task_name, script_path, safe_msg, recurrence)
         elif os_name == "mac":
-            job_id = _schedule_mac(target_dt, task_name, script_path)
+            job_id = _schedule_mac(target_dt, task_name, script_path, recurrence)
         else:
-            job_id = _schedule_linux(target_dt, task_name, script_path)
+            job_id = _schedule_linux(target_dt, task_name, script_path, recurrence)
     except Exception as e:
         script_path.unlink(missing_ok=True)
         print(f"[Reminder] ❌ Scheduling exception: {e}")
         return "Something went wrong while scheduling the reminder."
 
     if not job_id:
+        script_path.unlink(missing_ok=True)
         return "I couldn't register the reminder with the system scheduler."
 
     if player:
-        player.write_log(f"[Reminder] ✅ {date_str} {time_str} — {safe_msg[:40]}")
+        _tag = recurrence.upper() if recurrence != "once" else "ONCE"
+        player.write_log(f"[Reminder] ✅ {_tag} {date_str} {time_str} — {safe_msg[:40]}")
 
+    if recurrence == "daily":
+        return f"Daily reminder set for every day at {target_dt.strftime('%I:%M %p')}."
+    if recurrence == "weekly":
+        weekday = _WEEKDAY_XML[int(target_dt.strftime("%w"))]
+        return f"Weekly reminder set for every {weekday} at {target_dt.strftime('%I:%M %p')}."
     friendly_time = target_dt.strftime("%B %d at %I:%M %p")
     return f"Reminder set for {friendly_time}."

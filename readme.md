@@ -52,6 +52,10 @@ It's not just an assistant — it's an extension of your digital life.
 | ⚡ Auto-Start on Boot | Registers with the OS startup system (registry / LaunchAgent / .desktop) |
 | 📋 Clipboard Intelligence | Copy any text → floating panel with Translate / Summarise / Explain / Fix |
 | 🎨 Assistant Customization | Change the assistant name and your name from the UI — takes effect immediately |
+| 👏 Clap Activation | Wake with a clap, interrupt with a clap, unmute with a clap — no voice needed |
+| 🗣️ Custom Voice | Pick from 10 Gemini prebuilt voices — male and female |
+| ⏰ Recurring Reminders | Daily/weekly loops via OS schedulers — fires even when JARVIS is offline |
+| 📱 Phone Playback | JARVIS's voice streams to your phone — hear it on your headphones |
 
 ---
 
@@ -78,6 +82,60 @@ The biggest quality-of-life upgrade for an always-listening assistant: JARVIS ca
 Sliding-window context compression means the Live session no longer terminates when the context window fills up. Combined with session resumption, JARVIS holds one continuous conversation for hours without losing the thread.
 
 All three Live API upgrades degrade gracefully: if the preview API ever rejects them, JARVIS automatically reconnects with the standard configuration — users never see a crash.
+
+---
+
+## 🆕 What's New Here (fork upgrades)
+
+### 👏 Clap Activation — Wake and Interrupt without Speaking
+
+One clap wakes JARVIS. Clap again while it's talking and it stops instantly. A hard clap is a sharply-peaked, broadband signal, so the detector looks at peak-to-ambient ratio — speech and TV noise don't trip it.
+
+| Gesture | What happens |
+|---|---|
+| 👏 while idle | JARVIS greets you ("Yes, sir?") and starts listening |
+| 👏 while it speaks | Instant interrupt — mic reopens immediately |
+| 👏 while muted | Unmutts the mic + wakes |
+
+Config keys in `config/api_keys.json`:
+
+```json
+{
+  "clap_activation": true,
+  "clap_sensitivity": 2
+}
+```
+
+Sensitivity: `1` = light (baby claps / distant mic), `2` = default, `3` = strict (noisy rooms). Set `clap_activation` to `false` to disable.
+
+### 🗣️ Custom Voice — Pick the Voice You Like
+
+Open the **Customize** overlay (⚙️ button in the header) → Voice dropdown → choose from the Gemini nativo-audio prebuilt voices. Applies from the next session. You can also set `"voice_name"` directly in `config/api_keys.json`.
+
+| Male voices | Female voices |
+|---|---|
+| Charon (default, deep) | Kore |
+| Puck | Aoede |
+| Orus | Leda |
+| Fenrir | Zephyr |
+| Achernar | Pulcherrima |
+
+### ⏰ Recurring Reminders — It Reminds You Forever
+
+The reminder tool now supports `recurrence = "daily" | "weekly"` in addition to one-shot. It persists through OS-native schedulers — **Windows Task Scheduler**, **macOS LaunchAgent**, or **Linux systemd** — so they fire even when JARVIS isn't running.
+
+- "Remind me every day at 8:45 to drink water" → daily loop
+- "Remind me every Friday at 6pm to take out the trash" → weekly loop
+
+### 📱 Carry It on Your Phone (With Headphones)
+
+The **Remote Dashboard** (`Remote Control` button → QR code) now plays JARVIS's voice back to your phone over your local network. Pair once and:
+
+1. Connect your headphones to the phone
+2. Open the dashboard, tap the screen once (audio unlock)
+3. Tap 🎤 to open a live voice session, or use text
+
+Your phone mic streams in, JARVIS's voice streams back straight into your headphones, and the transcript appears in the feed. PC speakers can be muted independently.
 
 ---
 

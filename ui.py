@@ -28,9 +28,10 @@ from PyQt6.QtGui import (
     QPen, QPixmap, QRadialGradient, QShortcut,
 )
 from PyQt6.QtWidgets import (
-    QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
-    QMainWindow, QPushButton, QScrollArea, QSizePolicy, QSplitter,
-    QStackedWidget, QTextEdit, QVBoxLayout, QWidget, QProgressBar,
+    QApplication, QComboBox, QFileDialog, QFrame, QHBoxLayout, QLabel,
+    QLineEdit, QMainWindow, QPushButton, QScrollArea, QSizePolicy,
+    QSplitter, QStackedWidget, QTextEdit, QVBoxLayout, QWidget,
+    QProgressBar,
 )
 
 def _base_dir() -> Path:
@@ -1240,14 +1241,29 @@ class HueWheel(QWidget):
             self.hue_committed.emit(self.color())
 
 
-class CustomizeOverlay(QWidget):
-    """Floating overlay — change assistant name, user name and UI colour."""
+# Gemini Live prebuilt voices (native-audio model) — curated set
+LIVE_VOICES: list[str] = [
+    "Charon",      # default — deep male
+    "Puck",        # male
+    "Orus",        # male
+    "Fenrir",      # male
+    "Achernar",    # male
+    "Kore",        # female
+    "Aoede",       # female
+    "Leda",        # female
+    "Zephyr",      # female
+    "Pulcherrima", # female
+]
 
-    saved = pyqtSignal(str, str, str)   # assistant_name, user_name, ui_color
-    _OW, _OH = 400, 500
+
+class CustomizeOverlay(QWidget):
+    """Floating overlay — change assistant name, user name, voice and UI colour."""
+
+    saved = pyqtSignal(str, str, str, str)  # assistant_name, user_name, ui_color, voice_name
+    _OW, _OH = 400, 540
 
     def __init__(self, assistant_name="JARVIS", user_name="",
-                 ui_color=DEFAULT_UI_COLOR, parent=None):
+                 ui_color=DEFAULT_UI_COLOR, voice_name: str = "Charon", parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setStyleSheet(f"""
@@ -1294,6 +1310,23 @@ class CustomizeOverlay(QWidget):
         self._user_input.setFixedHeight(32)
         self._user_input.setStyleSheet(_fs)
         lay.addWidget(self._user_input)
+
+        lay.addSpacing(4)
+        lay.addWidget(_lbl("VOICE  (applies from the next session)", 8,
+                            color=C.TEXT_DIM, align=Qt.AlignmentFlag.AlignLeft))
+        self._voice_combo = QComboBox()
+        self._voice_combo.addItems(LIVE_VOICES)
+        if voice_name and voice_name in LIVE_VOICES:
+            self._voice_combo.setCurrentText(voice_name)
+        self._voice_combo.setFont(QFont("Courier New", 10))
+        self._voice_combo.setFixedHeight(32)
+        self._voice_combo.setStyleSheet(f"""
+            QComboBox {{ background: #000d12; color: {C.TEXT};
+                        border: 1px solid {C.BORDER}; border-radius: 3px; padding: 4px 8px; }}
+            QComboBox QAbstractItemView {{ background: #000d12; color: {C.TEXT};
+                        selection-background-color: {C.PRI_GHO}; }}
+        """)
+        lay.addWidget(self._voice_combo)
 
         # ── UI colour — renk çarkı ───────────────────────────────────────────
         lay.addSpacing(4)
@@ -1408,7 +1441,8 @@ class CustomizeOverlay(QWidget):
     def _save(self):
         name = self._name_input.text().strip() or "JARVIS"
         user = self._user_input.text().strip()
-        self.saved.emit(name, user, self._sel_color or DEFAULT_UI_COLOR)
+        voice = self._voice_combo.currentText()
+        self.saved.emit(name, user, self._sel_color or DEFAULT_UI_COLOR, voice)
         self.hide()
 
 
@@ -1846,6 +1880,7 @@ class MainWindow(QMainWindow):
     _cam_stream_sig = pyqtSignal(bool)       # True=start live stream, False=stop
     _cam_frame_sig  = pyqtSignal(bytes)      # live camera frame → HUD area
     _clipboard_sig  = pyqtSignal(str)        # clipboard text changed (thread-safe)
+    _unmute_sig     = pyqtSignal()           # force-unmute from any thread (clap wake)
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -1988,6 +2023,7 @@ class MainWindow(QMainWindow):
         self._cam_stream_sig.connect(self._on_cam_stream)
         self._cam_frame_sig.connect(self._on_cam_frame)
         self._clipboard_sig.connect(self._show_clipboard_panel)
+        self._unmute_sig.connect(self._force_unmute)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -3195,6 +3231,7 @@ class MainWindow(QMainWindow):
             cfg.get("assistant_name", "JARVIS") or "JARVIS",
             cfg.get("user_name", ""),
             cfg.get("ui_color", "") or DEFAULT_UI_COLOR,
+            cfg.get("voice_name", "") or "Charon",
             parent=cw,
         )
         ow, oh = CustomizeOverlay._OW, CustomizeOverlay._OH
@@ -3215,7 +3252,8 @@ class MainWindow(QMainWindow):
         if apply_ui_accent(hex_color):
             retheme_all_widgets(old, current_palette())
 
-    def _apply_name_update(self, name: str, user_name: str, ui_color: str = ""):
+    def _apply_name_update(self, name: str, user_name: str, ui_color: str = "",
+                           voice_name: str = ""):
         """Update all name/theme-dependent UI elements and persist to config."""
         self._assistant_name = name.strip() or "JARVIS"
         display = self._assistant_name.upper()
@@ -3242,10 +3280,14 @@ class MainWindow(QMainWindow):
             data["user_name"] = user_name.strip()
             if ui_color:
                 data["ui_color"] = ui_color.strip().lower()
+            if voice_name:
+                data["voice_name"] = voice_name.strip()
             API_FILE.write_text(json.dumps(data, indent=4), encoding="utf-8")
             self._log.append_log(f"SYS: Identity updated — {display}")
             if color_changed:
                 self._log.append_log(f"SYS: UI colour applied — {ui_color}")
+            if voice_name:
+                self._log.append_log(f"SYS: Voice set to {voice_name} (next session)")
         except Exception as e:
             self._log.append_log(f"ERR: Config save failed — {e}")
 
@@ -3306,6 +3348,11 @@ class MainWindow(QMainWindow):
         else:
             self._apply_state("LISTENING")
             self._log.append_log("SYS: Microphone active.")
+
+    def _force_unmute(self):
+        """Runs on the Qt thread via _unmute_sig — e.g. a clap while muted."""
+        if self._muted:
+            self._toggle_mute()
 
     def _style_mute_btn(self):
         if self._muted:
@@ -3437,6 +3484,10 @@ class JarvisUI:
 
     def notify_phone_connected(self) -> None:
         self._win.notify_phone_connected()
+
+    def request_unmute(self):
+        """Thread-safe: unmute the mic (used by clap wake)."""
+        self._win._unmute_sig.emit()
 
     def set_state(self, state: str):
         self._win._state_sig.emit(state)

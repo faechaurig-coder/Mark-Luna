@@ -253,6 +253,45 @@
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    // ── Assistant voice playback (headphones on the phone) ──────────────────
+    let _playCtx  = null;
+    let _playNext = 0;
+    let _outWs    = null;
+
+    function _initAudioOut() {
+      if (_playCtx) {
+        if (_playCtx.state === 'suspended') _playCtx.resume();
+        return;
+      }
+      _playCtx = new (window.AudioContext || window.webkitAudioContext)();
+      _startOutWs();
+    }
+
+    function _startOutWs() {
+      const ws = new WebSocket(
+        `${_wsProto}://${location.host}/ws/assistant-audio?token=${encodeURIComponent(_authToken)}`
+      );
+      ws.binaryType = 'arraybuffer';
+      ws.onmessage = (e) => {
+        const i16 = new Int16Array(e.data);
+        const f32 = new Float32Array(i16.length);
+        for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 32768;
+        const b = _playCtx.createBuffer(1, f32.length, 24000);
+        b.copyToChannel(f32, 0);
+        const s = _playCtx.createBufferSource();
+        s.buffer = b;
+        s.connect(_playCtx.destination);
+        const t = Math.max(_playCtx.currentTime, _playNext);
+        s.start(t);
+        _playNext = t + b.duration;
+      };
+      ws.onclose = () => setTimeout(_startOutWs, 1500);
+      _outWs = ws;
+    }
+
+    // Browsers block audio until first touch — init the context on first tap
+    document.addEventListener('pointerdown', _initAudioOut, { once: true });
+
     // ── File helpers ──────────────────────────────────────────────────────────
     function _fileIcon(name) {
       const ext = (name.split('.').pop() || '').toLowerCase();

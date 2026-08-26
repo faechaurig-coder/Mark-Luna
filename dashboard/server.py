@@ -461,6 +461,7 @@ class DashboardServer:
         self._token_keys: dict[str, str]  = {}   # auth_token → session_key
         self._aes_cache:  dict[str, bytes]= {}   # session_key → AES bytes
         self._clients: set[WebSocket]     = set()
+        self._audio_clients: set[WebSocket] = set()   # assistant voice → phone playback
         self._history: list[dict]         = []
         self._command_queue               = asyncio.Queue()
         self._wake_callback               = None
@@ -532,6 +533,19 @@ class DashboardServer:
             except Exception:
                 dead.add(ws)
         self._clients -= dead
+
+    # ── assistant voice → phone playback (binary PCM @24 kHz) ──────────────
+
+    async def push_audio_out(self, chunk: bytes) -> None:
+        if not self._audio_clients:
+            return
+        dead: set[WebSocket] = set()
+        for ws in list(self._audio_clients):
+            try:
+                await ws.send_bytes(chunk)
+            except Exception:
+                dead.add(ws)
+        self._audio_clients -= dead
 
     # ── FastAPI app ───────────────────────────────────────────────────────
 
@@ -718,6 +732,25 @@ class DashboardServer:
                 asyncio.create_task(self.broadcast(
                     {"type": "sys", "text": "Phone microphone stopped."}
                 ))
+
+        # ── Assistant voice → phone playback (headphone use) ────────────────
+
+        @app.websocket("/ws/assistant-audio")
+        async def assistant_audio_ws(websocket: WebSocket, token: str = ""):
+            tok = token.strip()
+            if not tok or tok not in self._tokens:
+                await websocket.close(code=4001)
+                return
+            await websocket.accept()
+            self._audio_clients.add(websocket)
+            try:
+                while True:
+                    # keep the socket open; client sends nothing
+                    await websocket.receive_text()
+            except WebSocketDisconnect:
+                pass
+            finally:
+                self._audio_clients.discard(websocket)
 
         # ── File sharing ──────────────────────────────────────────────────────
 
